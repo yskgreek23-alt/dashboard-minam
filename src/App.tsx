@@ -5,16 +5,14 @@ import {
   Area, ReferenceLine, LabelList
 } from 'recharts';
 import {
-  LayoutDashboard, Table as TableIcon, AlertCircle,
-  BarChart3, TrendingUp,
-  Activity, Target, Calendar, FolderKanban, Layers, Sparkles,
-  Filter, X, HardHat, Building2,
-  Database, Search, ChevronRight, ChevronDown, RefreshCw,
-  Flame, ShieldAlert, Gauge, Globe, Clock
+  LayoutDashboard, Table as TableIcon, AlertCircle, BarChart3, TrendingUp,
+  Activity, Target, Calendar, FolderKanban, Layers, Sparkles, Filter, X,
+  HardHat, Building2, Database, Search, ChevronRight, ChevronDown, RefreshCw,
+  Flame, ShieldAlert, Gauge, Globe, Clock, Award
 } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// PALETA PERSONALIZADA (Tema_propio.json)
+// PALETA ARMÓNICA Y COLORIMETRÍA (Tema_propio.json)
 // ═══════════════════════════════════════════════════════════════════════════
 const THEME_BLUE       = '#448FF2';
 const THEME_GREEN      = '#33A650';
@@ -24,24 +22,43 @@ const THEME_RED        = '#F23838';
 const THEME_CYAN       = '#46BCC6';
 const THEME_LIME       = '#73E046';
 const THEME_STEEL      = '#3599B8';
+const THEME_TURQUOISE  = '#4AC5BB';
 const THEME_SLATE      = '#5F6B6D';
 const THEME_LIGHT_BLUE = '#A4DDEE';
 const THEME_TEAL_DARK  = '#28738A';
+const THEME_SEA_GREEN  = '#168980';
 const THEME_CHARCOAL   = '#293537';
 const THEME_PETROL     = '#1B4D5C';
 const THEME_FOREST     = '#0F5C55';
 const THEME_DARKEST    = '#1C2325';
 
-const VMGA_GRADIENT   = `linear-gradient(135deg, ${THEME_BLUE} 0%, ${THEME_TEAL_DARK} 100%)`;
-const VMDERN_GRADIENT = `linear-gradient(135deg, ${THEME_GREEN} 0%, ${THEME_FOREST} 100%)`;
-const OCT_GRADIENT    = `linear-gradient(135deg, ${THEME_DARKEST} 0%, ${THEME_PETROL} 100%)`;
-const ALERT_GRADIENT  = `linear-gradient(135deg, ${THEME_RED} 0%, #BB4A4A 100%)`;
-const HALLOWEEN_GRAD  = `linear-gradient(135deg, #F25C05 0%, #D9480F 100%)`;
+const VMGA_GRADIENT   = `linear-gradient(135deg, ${THEME_PETROL} 0%, ${THEME_TEAL_DARK} 50%, ${THEME_BLUE} 100%)`;
+const VMDERN_GRADIENT = `linear-gradient(135deg, ${THEME_FOREST} 0%, ${THEME_SEA_GREEN} 55%, ${THEME_GREEN} 100%)`;
+const OCT_GRADIENT    = `linear-gradient(135deg, ${THEME_DARKEST} 0%, ${THEME_PETROL} 60%, ${THEME_TEAL_DARK} 100%)`;
+const ALERT_GRADIENT  = `linear-gradient(135deg, #BB4A4A 0%, ${THEME_RED} 100%)`;
+const HALLOWEEN_GRAD  = `linear-gradient(135deg, #FF7A00 0%, ${THEME_ORANGE} 55%, #C2410C 100%)`;
 
-// Colores de semáforos y KPIs intactos
 const SEM_COLOR_ALTO  = '#059669';
 const SEM_COLOR_MEDIO = '#d97706';
 const SEM_COLOR_BAJO  = '#e11d48';
+
+// Ícono SVG de Calabaza para cabeceras de Octubre
+const PumpkinBadge = () => (
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+    <span>OCTUBRE</span>
+    <span
+      role="img"
+      aria-label="calabaza"
+      style={{
+        fontSize: 15,
+        filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.35))',
+        lineHeight: 1,
+      }}
+    >
+      🎃
+    </span>
+  </span>
+);
 
 const MESES_CONFIG = [
   { num: 1,  label: 'Enero',     short: 'Ene', colDev: 'DEVENGADO_ENERO',     colProg: 'PROGRAMACION ENERO',     aliasesDev: ['MTO_DEVENGA_01', 'DEVENGADO_ENERO', 'DEVENGADO ENERO', 'DEV_ENE'],         aliasesProg: ['PROGRAMACION ENERO', 'PROGRAMACION_ENERO', 'PROG_ENERO', 'ENERO'] },
@@ -59,11 +76,7 @@ const MESES_CONFIG = [
 ];
 
 const fmt = (v: any) =>
-  new Intl.NumberFormat('es-PE', {
-    style: 'currency',
-    currency: 'PEN',
-    maximumFractionDigits: 0,
-  }).format(Number(v) || 0);
+  new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN', maximumFractionDigits: 0 }).format(Number(v) || 0);
 
 const fmtC = (v: any) => {
   const n = Number(v) || 0;
@@ -75,25 +88,14 @@ const fmtC = (v: any) => {
 };
 
 const fmtM = (v: any) =>
-  `S/ ${((Number(v) || 0) / 1e6).toLocaleString('es-PE', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} M`;
+  `S/ ${((Number(v) || 0) / 1e6).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M`;
 
-// ═══════════════════════════════════════════════════════════════════════════
-// REGLA DE FORMATO DE PROGRAMA PRESUPUESTAL (PP CONCAT):
-// - 9001.ACCIONES CENTRALES -> "AC 9001"
-// - 9002.ASIGNACIONES PRESUPUESTARIAS QUE NO RESULTAN EN PRODUCTOS -> "APNOP 9002"
-// - 0068.REDUCCION DE VULNERABILIDAD... -> "PP 068"
-// ═══════════════════════════════════════════════════════════════════════════
 const formatPPConcat = (val: any) => {
   if (!val) return 'SIN DATO';
   const raw = String(val).trim().toUpperCase();
   if (!raw || raw === '-' || raw === 'NAN') return 'SIN DATO';
-
   if (raw.includes('9001') || raw.includes('ACCIONES CENTRALES')) return 'AC 9001';
   if (raw.includes('9002') || raw.includes('NO RESULTAN EN PRODUCTOS') || raw.includes('APNOP')) return 'APNOP 9002';
-
   const m = raw.match(/^0*(\d{1,4})/);
   if (m) {
     const num = m[1];
@@ -101,11 +103,9 @@ const formatPPConcat = (val: any) => {
     if (num === '9002') return 'APNOP 9002';
     return `PP ${num.padStart(3, '0')}`;
   }
-
   return raw.length > 16 ? raw.slice(0, 16) + '…' : raw;
 };
 
-// Formateador de etiqueta corta para Genérica de Gasto (GG CONCAT) para que entren todas en el eje X
 const formatGGShort = (val: any) => {
   const s = String(val || '').trim().toUpperCase();
   if (s.includes('2.1') || s.includes('PERSONAL')) return '2.1 Personal';
@@ -119,6 +119,24 @@ const formatGGShort = (val: any) => {
   if (s.includes('2.0') || s.includes('RESERVA')) return '2.0 Reserva Conting.';
   return s.length > 22 ? s.slice(0, 22) + '…' : s;
 };
+
+// Base referencial de Ministerios del Poder Ejecutivo para el Ranking Nacional (cuando aún no carga o se complementa con SharePoint)
+const INITIAL_MINISTERIOS_RANKING = [
+  { sector: '36. TRANSPORTE Y COMUNICACIONES', short: 'MTC', pimGen: 14250000000, devGen: 11180000000, pimInv: 9850000000, devInv: 7920000000, pimProy: 9120000000, devProy: 7380000000 },
+  { sector: '10. EDUCACION', short: 'MINEDU', pimGen: 18400000000, devGen: 14150000000, pimInv: 3420000000, devInv: 2680000000, pimProy: 3100000000, devProy: 2450000000 },
+  { sector: '11. SALUD', short: 'MINSA', pimGen: 13890000000, devGen: 10520000000, pimInv: 2890000000, devInv: 2180000000, pimProy: 2650000000, devProy: 2010000000 },
+  { sector: '37. VIVIENDA, CONSTRUCCION Y SANEAMIENTO', short: 'MVCS', pimGen: 5420000000, devGen: 4050000000, pimInv: 4120000000, devInv: 3150000000, pimProy: 3890000000, devProy: 2990000000 },
+  { sector: '40. DESARROLLO E INCLUSION SOCIAL', short: 'MIDIS', pimGen: 6950000000, devGen: 5180000000, pimInv: 185000000, devInv: 141000000, pimProy: 150000000, devProy: 115000000 },
+  { sector: '13. DESARROLLO AGRARIO Y RIEGO', short: 'MIDAGRI', pimGen: 3980000000, devGen: 2920000000, pimInv: 2450000000, devInv: 1820000000, pimProy: 2210000000, devProy: 1650000000 },
+  { sector: '05. AMBIENTE', short: 'MINAM', pimGen: 1043800000, devGen: 749720000, pimInv: 262400000, devInv: 189500000, pimProy: 238900000, devProy: 173200000, isMinam: true },
+  { sector: '38. PRODUCCION', short: 'PRODUCE', pimGen: 1290000000, devGen: 912000000, pimInv: 490000000, devInv: 348000000, pimProy: 445000000, devProy: 315000000 },
+  { sector: '26. DEFENSA', short: 'MINDEF', pimGen: 8920000000, devGen: 6250000000, pimInv: 1150000000, devInv: 798000000, pimProy: 980000000, devProy: 682000000 },
+  { sector: '07. INTERIOR', short: 'MININTER', pimGen: 11850000000, devGen: 8190000000, pimInv: 980000000, devInv: 665000000, pimProy: 810000000, devProy: 552000000 },
+  { sector: '01. PRESIDENCIA CONSEJO DE MINISTROS', short: 'PCM', pimGen: 4680000000, devGen: 3180000000, pimInv: 2150000000, devInv: 1460000000, pimProy: 1980000000, devProy: 1350000000 },
+  { sector: '16. ENERGIA Y MINAS', short: 'MINEM', pimGen: 1450000000, devGen: 965000000, pimInv: 890000000, devInv: 585000000, pimProy: 840000000, devProy: 552000000 },
+  { sector: '09. ECONOMIA Y FINANZAS', short: 'MEF', pimGen: 32500000000, devGen: 21100000000, pimInv: 620000000, devInv: 398000000, pimProy: 540000000, devProy: 345000000 },
+  { sector: '35. COMERCIO EXTERIOR Y TURISMO', short: 'MINCETUR', pimGen: 840000000, devGen: 538000000, pimInv: 295000000, devInv: 185000000, pimProy: 270000000, devProy: 169000000 },
+];
 
 const TTip = ({ active, payload, label }: any) => {
   if (!active || !payload || !payload.length) return null;
@@ -140,6 +158,128 @@ const TTip = ({ active, payload, label }: any) => {
         );
       })}
     </div>
+  );
+};
+
+// Componente visual de Embudo (Funnel) con resaltado especial para Sector Ambiental / MINAM
+const FunnelRankingCard = ({ title, sub, items, grad }: any) => {
+  const maxPct = Math.max(...items.map((x: any) => x.pct || 0), 100);
+  return (
+    <GCard grad={grad} icon={Award} title={title} sub={sub} badge="EMBUDO DE EJECUCIÓN %">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 4 }}>
+        {items.map((item: any, idx: number) => {
+          const isHighlight = item.isMinam;
+          // Ancho tipo embudo decreciente y proporcional al % de avance
+          const widthPct = Math.max(28, Math.min(100, (item.pct / maxPct) * 100));
+          const barGradient = isHighlight
+            ? `linear-gradient(90deg, ${THEME_GREEN} 0%, ${THEME_LIME} 100%)`
+            : idx < 3
+            ? `linear-gradient(90deg, ${THEME_PETROL} 0%, ${THEME_BLUE} 100%)`
+            : idx < 7
+            ? `linear-gradient(90deg, ${THEME_TEAL_DARK} 0%, ${THEME_CYAN} 100%)`
+            : `linear-gradient(90deg, ${THEME_SLATE} 0%, #94a3b8 100%)`;
+
+          return (
+            <div
+              key={item.name}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '32px minmax(150px, 1.2fr) 2fr 74px',
+                alignItems: 'center',
+                gap: 10,
+                padding: isHighlight ? '9px 12px' : '6px 10px',
+                borderRadius: 12,
+                background: isHighlight ? 'linear-gradient(90deg, #ecfdf5 0%, #f0fdf4 100%)' : '#f8fafc',
+                border: isHighlight ? `2px solid ${THEME_GREEN}` : '1px solid #e2e8f0',
+                boxShadow: isHighlight ? '0 4px 16px rgba(51,166,80,0.22)' : 'none',
+                transform: isHighlight ? 'scale(1.01)' : 'none',
+              }}
+            >
+              {/* Posición en el Ranking */}
+              <div
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 11,
+                  fontWeight: 900,
+                  background: isHighlight ? THEME_GREEN : idx < 3 ? THEME_GOLD : '#e2e8f0',
+                  color: isHighlight ? 'white' : idx < 3 ? THEME_DARKEST : THEME_CHARCOAL,
+                }}
+              >
+                #{idx + 1}
+              </div>
+
+              {/* Nombre del Ministerio / Pliego */}
+              <div style={{ overflow: 'hidden' }}>
+                <div
+                  style={{
+                    fontSize: isHighlight ? 11.5 : 10.8,
+                    fontWeight: isHighlight ? 900 : 700,
+                    color: isHighlight ? THEME_FOREST : THEME_DARKEST,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                  }}
+                >
+                  {isHighlight && <span style={{ color: THEME_ORANGE, fontSize: 13 }}>★</span>}
+                  <span>{item.name}</span>
+                </div>
+                <div style={{ fontSize: 9.2, color: THEME_SLATE, fontWeight: 600 }}>
+                  PIM: {fmtC(item.pim)} · Dev: {fmtC(item.dev)}
+                </div>
+              </div>
+
+              {/* Barra central en forma de Embudo centrado */}
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                <div
+                  style={{
+                    width: `${widthPct}%`,
+                    height: isHighlight ? 22 : 17,
+                    background: barGradient,
+                    borderRadius: 99,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: isHighlight ? THEME_DARKEST : 'white',
+                    fontSize: 9.5,
+                    fontWeight: 900,
+                    boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.35)',
+                    transition: 'width 0.35s ease',
+                  }}
+                >
+                  {widthPct > 42 ? fmtC(item.dev) : ''}
+                </div>
+              </div>
+
+              {/* % de Avance */}
+              <div style={{ textAlign: 'right' }}>
+                <span
+                  style={{
+                    padding: '3px 8px',
+                    borderRadius: 7,
+                    fontSize: 11,
+                    fontWeight: 900,
+                    fontFamily: 'monospace',
+                    background: isHighlight ? THEME_GREEN : '#ffffff',
+                    color: isHighlight ? '#ffffff' : THEME_PETROL,
+                    border: isHighlight ? 'none' : '1px solid #cbd5e1',
+                  }}
+                >
+                  {item.pct.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </GCard>
   );
 };
 
@@ -176,7 +316,7 @@ const NBtn = ({ active, onClick, icon: Icon, label, badge = null, badgeColor = T
 );
 
 const GCard = ({ grad, icon: Icon, title, sub, children, full = false, badge = null, right = null }: any) => (
-  <div style={{ gridColumn: full ? '1 / -1' : 'auto', background: 'white', padding: 20, borderRadius: 22, border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(28,35,37,0.03)' }}>
+  <div style={{ gridColumn: full ? '1 / -1' : 'auto', background: 'white', padding: 20, borderRadius: 22, border: '1px solid #e2e8f0', boxShadow: '0 6px 22px rgba(27,77,92,0.04)' }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, justifyContent: 'space-between', flexWrap: 'wrap' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
         <div style={{ background: grad, padding: 9, borderRadius: 12, boxShadow: '0 4px 12px rgba(28,35,37,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -200,9 +340,6 @@ const GCard = ({ grad, icon: Icon, title, sub, children, full = false, badge = n
   </div>
 );
 
-// ═══════════════════════════════════════════════════════════════════════════
-// VELOCÍMETRO COMPACTO (SIN ESPACIOS EN BLANCO EXCESIVOS - IMAGEN 2)
-// ═══════════════════════════════════════════════════════════════════════════
 const GaugeKPI = ({ pct, label, meta, sem, subValue, max = 100, thresholds = [68, 78] }: any) => {
   const v = Math.max(0, Math.min(Number(pct) || 0, max));
   const cx = 100, cy = 84, r = 66, sw = 15;
@@ -326,14 +463,14 @@ const PliegoDonutCard = ({ p, mesLabel }: any) => (
 
 const buildInitialSectorData = () => {
   const specs = [
-    { pliego: '005. MINAM', pliegoNom: '005. MINISTERIO DEL AMBIENTE', ue: '001. MINAM - ADM. GENERAL', ueNom: '001. ADMINISTRACION GENERAL - MINAM', dep: 'VMGA', org: 'DGCA', uorg: 'DCA · Calidad del Aire y Emisiones', pp: 'PP 096', ppCod: '0096', tipo: 'ACTIVIDAD', cat: '5. GASTOS CORRIENTES', ff: '1. RECURSOS ORDINARIOS', gg: '2.3 BIENES Y SERVICIOS', depto: 'LIMA', pia: 18500000, pim: 22400000, cert: 21450000, comp: 19800000, dev: 17650000, cui: '-', q4Profile: [0.36, 0.34, 0.30], octRatio: 0.94 },
-    { pliego: '005. MINAM', pliegoNom: '005. MINISTERIO DEL AMBIENTE', ue: '003. GICA - CALIDAD AMBIENTAL', ueNom: '003. GESTION INTEGRAL DE LA CALIDAD AMBIENTAL', dep: 'VMGA', org: 'GICA', uorg: 'GICA · Infraestructura de Residuos Sólidos', pp: 'PP 036', ppCod: '0036', tipo: 'PROYECTO', cat: '6. GASTOS DE CAPITAL', ff: '3. RECURSOS POR OPERACIONES OFICIALES DE CREDITO', gg: '2.6 ADQUISICION DE ACTIVOS NO FINANCIEROS', depto: 'PIURA', pia: 68000000, pim: 84500000, cert: 79200000, comp: 72900000, dev: 61400000, cui: 'SULLANA II', q4Profile: [0.26, 0.31, 0.43], octRatio: 0.84 },
-    { pliego: '005. MINAM', pliegoNom: '005. MINISTERIO DEL AMBIENTE', ue: '002. PNCB - BOSQUES', ueNom: '002. CONSERVACION DE BOSQUES', dep: 'VMDERN', org: 'PNCB', uorg: 'PNCB · Conservación de Bosques', pp: 'PP 130', ppCod: '0130', tipo: 'PROYECTO', cat: '6. GASTOS DE CAPITAL', ff: '3. RECURSOS POR OPERACIONES OFICIALES DE CREDITO', gg: '2.6 ADQUISICION DE ACTIVOS NO FINANCIEROS', depto: 'SAN MARTIN', pia: 54000000, pim: 67800000, cert: 63400000, comp: 58500000, dev: 51200000, cui: 'PIP1', q4Profile: [0.29, 0.39, 0.32], octRatio: 0.88 },
-    { pliego: '050. SERNANP', pliegoNom: '050. SERVICIO NACIONAL DE AREAS NATURALES PROTEGIDAS', ue: '001. SERNANP', ueNom: '001. SERNANP CONSERVACION ANP', dep: 'ADSCRITOS', org: 'SERNANP', uorg: 'DGANP · Gestión de Áreas Naturales Protegidas', pp: 'PP 057', ppCod: '0057', tipo: 'ACTIVIDAD', cat: '5. GASTOS CORRIENTES', ff: '2. RECURSOS DIRECTAMENTE RECAUDADOS', gg: '2.3 BIENES Y SERVICIOS', depto: 'CUSCO', pia: 112000000, pim: 155106649, cert: 151772542, comp: 145615218, dev: 116486703, cui: '-', q4Profile: [0.36, 0.33, 0.31], octRatio: 0.94 },
-    { pliego: '051. OEFA', pliegoNom: '051. ORGANISMO DE EVALUACION Y FISCALIZACION AMBIENTAL', ue: '001. OEFA', ueNom: '001. OEFA FISCALIZACION', dep: 'ADSCRITOS', org: 'OEFA', uorg: 'DSEM · Supervisión en Energía y Minas', pp: 'PP 144', ppCod: '0144', tipo: 'ACTIVIDAD', cat: '5. GASTOS CORRIENTES', ff: '2. RECURSOS DIRECTAMENTE RECAUDADOS', gg: '2.3 BIENES Y SERVICIOS', depto: 'LIMA', pia: 215000000, pim: 327739284, cert: 308281001, comp: 299543321, dev: 239563383, cui: '-', q4Profile: [0.34, 0.35, 0.31], octRatio: 0.97 },
-    { pliego: '052. SENACE', pliegoNom: '052. SERVICIO NACIONAL DE CERTIFICACION AMBIENTAL', ue: '001. SENACE', ueNom: '001. SENACE CERTIFICACION', dep: 'ADSCRITOS', org: 'SENACE', uorg: 'DEAR · Evaluación Ambiental de Proyectos', pp: 'APNOP 9002', ppCod: '9002', tipo: 'ACTIVIDAD', cat: '5. GASTOS CORRIENTES', ff: '1. RECURSOS ORDINARIOS', gg: '2.1 PERSONAL Y OBLIGACIONES SOCIALES', depto: 'LIMA', pia: 36800000, pim: 55318995, cert: 53652479, comp: 53066656, dev: 40327869, cui: '-', q4Profile: [0.33, 0.34, 0.33], octRatio: 0.92 },
-    { pliego: '055. IIAP', pliegoNom: '055. INSTITUTO DE INVESTIGACIONES DE LA AMAZONIA PERUANA', ue: '001. IIAP', ueNom: '001. IIAP IQUITOS', dep: 'ADSCRITOS', org: 'IIAP', uorg: 'DBIO · Investigación en Biodiversidad Amazónica', pp: 'PP 137', ppCod: '0137', tipo: 'PROYECTO', cat: '6. GASTOS DE CAPITAL', ff: '5. RECURSOS DETERMINADOS', gg: '2.6 ADQUISICION DE ACTIVOS NO FINANCIEROS', depto: 'LORETO', pia: 29400000, pim: 35152141, cert: 34683446, comp: 29213269, dev: 23500338, cui: 'LABORATORIO', q4Profile: [0.25, 0.32, 0.43], octRatio: 0.79 },
-    { pliego: '056. INAIGEM', pliegoNom: '056. INSTITUTO NACIONAL DE INVESTIGACION EN GLACIARES', ue: '001. INAIGEM', ueNom: '001. INAIGEM HUARAZ', dep: 'ADSCRITOS', org: 'INAIGEM', uorg: 'DIG · Investigación en Glaciares', pp: 'PP 068', ppCod: '0068', tipo: 'PROYECTO', cat: '6. GASTOS DE CAPITAL', ff: '1. RECURSOS ORDINARIOS', gg: '2.6 ADQUISICION DE ACTIVOS NO FINANCIEROS', depto: 'ANCASH', pia: 14200000, pim: 16115963, cert: 15136099, comp: 14844194, dev: 11524639, cui: 'LAGUNAS', q4Profile: [0.24, 0.31, 0.45], octRatio: 0.74 },
+    { pliego: '005. MINAM', pliegoNom: '005. MINISTERIO DEL AMBIENTE', ue: '001. ADMINISTRACION GENERAL', ueNom: '001. ADMINISTRACION GENERAL - MINAM', dep: 'VMGA', org: 'DGCA', uorg: 'DCA · Calidad del Aire y Emisiones', pp: 'PP 096', ppCod: '0096', tipo: 'ACTIVIDAD', cat: '5. GASTOS CORRIENTES', ff: '1. RECURSOS ORDINARIOS', gg: '2.3 BIENES Y SERVICIOS', depto: 'LIMA', pia: 115890852, pim: 106994146, cert: 101159595, comp: 100390338, dev: 71576693, cui: '-', q4Profile: [0.36, 0.34, 0.30], octRatio: 0.514 },
+    { pliego: '005. MINAM', pliegoNom: '005. MINISTERIO DEL AMBIENTE', ue: '002. CONSERVACION DE BOSQUES', ueNom: '002. CONSERVACION DE BOSQUES', dep: 'VMDERN', org: 'PNCB', uorg: 'PNCB · Conservación de Bosques', pp: 'PP 130', ppCod: '0130', tipo: 'PROYECTO', cat: '6. GASTOS DE CAPITAL', ff: '3. RECURSOS POR OPERACIONES OFICIALES DE CREDITO', gg: '2.6 ADQUISICION DE ACTIVOS NO FINANCIEROS', depto: 'SAN MARTIN', pia: 54000000, pim: 67800000, cert: 63400000, comp: 58500000, dev: 51200000, cui: 'PIP1', q4Profile: [0.29, 0.39, 0.32], octRatio: 0.88 },
+    { pliego: '005. MINAM', pliegoNom: '005. MINISTERIO DEL AMBIENTE', ue: '003. GESTION INTEGRAL DE LA CALIDAD AMBIENTAL', ueNom: '003. GESTION INTEGRAL DE LA CALIDAD AMBIENTAL', dep: 'VMGA', org: 'GICA', uorg: 'GICA · Infraestructura de Residuos Sólidos', pp: 'PP 036', ppCod: '0036', tipo: 'PROYECTO', cat: '6. GASTOS DE CAPITAL', ff: '3. RECURSOS POR OPERACIONES OFICIALES DE CREDITO', gg: '2.6 ADQUISICION DE ACTIVOS NO FINANCIEROS', depto: 'PIURA', pia: 110000000, pim: 129414496, cert: 112019249, comp: 112840608, dev: 90728840, cui: 'SULLANA II', q4Profile: [0.26, 0.31, 0.43], octRatio: 0.84 },
+    { pliego: '050. SERNANP', pliegoNom: '050. SERVICIO NACIONAL DE AREAS NATURALES PROTEGIDAS', ue: '001. SERNANP', ueNom: '001. SERNANP CONSERVACION ANP', dep: 'ADSCRITOS', org: 'SERNANP', uorg: 'DGANP · Gestión de Áreas Naturales Protegidas', pp: 'PP 057', ppCod: '0057', tipo: 'ACTIVIDAD', cat: '5. GASTOS CORRIENTES', ff: '2. RECURSOS DIRECTAMENTE RECAUDADOS', gg: '2.3 BIENES Y SERVICIOS', depto: 'CUSCO', pia: 112000000, pim: 155106649, cert: 151772542, comp: 145615218, dev: 116486703, cui: '-', q4Profile: [0.36, 0.33, 0.31], octRatio: 0.753 },
+    { pliego: '051. OEFA', pliegoNom: '051. ORGANISMO DE EVALUACION Y FISCALIZACION AMBIENTAL', ue: '001. OEFA', ueNom: '001. OEFA FISCALIZACION', dep: 'ADSCRITOS', org: 'OEFA', uorg: 'DSEM · Supervisión en Energía y Minas', pp: 'PP 144', ppCod: '0144', tipo: 'ACTIVIDAD', cat: '5. GASTOS CORRIENTES', ff: '2. RECURSOS DIRECTAMENTE RECAUDADOS', gg: '2.3 BIENES Y SERVICIOS', depto: 'LIMA', pia: 215000000, pim: 327739284, cert: 308281001, comp: 299543321, dev: 239563383, cui: '-', q4Profile: [0.34, 0.35, 0.31], octRatio: 0.64 },
+    { pliego: '052. SENACE', pliegoNom: '052. SERVICIO NACIONAL DE CERTIFICACION AMBIENTAL', ue: '001. SENACE', ueNom: '001. SENACE CERTIFICACION', dep: 'ADSCRITOS', org: 'SENACE', uorg: 'DEAR · Evaluación Ambiental de Proyectos', pp: 'APNOP 9002', ppCod: '9002', tipo: 'ACTIVIDAD', cat: '5. GASTOS CORRIENTES', ff: '1. RECURSOS ORDINARIOS', gg: '2.1 PERSONAL Y OBLIGACIONES SOCIALES', depto: 'LIMA', pia: 36800000, pim: 55318995, cert: 53652479, comp: 53066656, dev: 40327869, cui: '-', q4Profile: [0.33, 0.34, 0.33], octRatio: 0.799 },
+    { pliego: '055. IIAP', pliegoNom: '055. INSTITUTO DE INVESTIGACIONES DE LA AMAZONIA PERUANA', ue: '001. IIAP', ueNom: '001. IIAP IQUITOS', dep: 'ADSCRITOS', org: 'IIAP', uorg: 'DBIO · Investigación en Biodiversidad Amazónica', pp: 'PP 137', ppCod: '0137', tipo: 'PROYECTO', cat: '6. GASTOS DE CAPITAL', ff: '5. RECURSOS DETERMINADOS', gg: '2.6 ADQUISICION DE ACTIVOS NO FINANCIEROS', depto: 'LORETO', pia: 29400000, pim: 35152141, cert: 34683446, comp: 29213269, dev: 23500338, cui: 'LABORATORIO', q4Profile: [0.25, 0.32, 0.43], octRatio: 0.61 },
+    { pliego: '056. INAIGEM', pliegoNom: '056. INSTITUTO NACIONAL DE INVESTIGACION EN GLACIARES', ue: '001. INAIGEM', ueNom: '001. INAIGEM HUARAZ', dep: 'ADSCRITOS', org: 'INAIGEM', uorg: 'DIG · Investigación en Glaciares', pp: 'PP 068', ppCod: '0068', tipo: 'PROYECTO', cat: '6. GASTOS DE CAPITAL', ff: '1. RECURSOS ORDINARIOS', gg: '2.6 ADQUISICION DE ACTIVOS NO FINANCIEROS', depto: 'ANCASH', pia: 14200000, pim: 16115963, cert: 15136099, comp: 14844194, dev: 11524639, cui: 'LAGUNAS', q4Profile: [0.24, 0.31, 0.45], octRatio: 0.689 },
     { pliego: '112. IGP', pliegoNom: '112. INSTITUTO GEOFISICO DEL PERU', ue: '001. IGP', ueNom: '001. INSTITUTO GEOFISICO DEL PERU', dep: 'ADSCRITOS', org: 'IGP', uorg: 'DCN · Ciencias de la Tierra Sólida', pp: 'PP 068', ppCod: '0068', tipo: 'PROYECTO', cat: '6. GASTOS DE CAPITAL', ff: '1. RECURSOS ORDINARIOS', gg: '2.6 ADQUISICION DE ACTIVOS NO FINANCIEROS', depto: 'AREQUIPA', pia: 38200000, pim: 43500000, cert: 41200000, comp: 38900000, dev: 34200000, cui: 'ALERTA TEMPRANA', q4Profile: [0.31, 0.37, 0.32], octRatio: 0.90 },
     { pliego: '331. SENAMHI', pliegoNom: '331. SERVICIO NACIONAL DE METEOROLOGIA E HIDROLOGIA', ue: '001. SENAMHI', ueNom: '001. SENAMHI SEDE CENTRAL', dep: 'ADSCRITOS', org: 'SENAMHI', uorg: 'DGM · Meteorología y Evaluación Ambiental', pp: 'PP 068', ppCod: '0068', tipo: 'ACTIVIDAD', cat: '5. GASTOS CORRIENTES', ff: '1. RECURSOS ORDINARIOS', gg: '2.1 PERSONAL Y OBLIGACIONES SOCIALES', depto: 'LIMA', pia: 76500000, pim: 84200000, cert: 81400000, comp: 77900000, dev: 68800000, cui: '-', q4Profile: [0.35, 0.33, 0.32], octRatio: 0.96 },
   ];
@@ -347,6 +484,7 @@ const buildInitialSectorData = () => {
 
     return {
       ANO_EJE: '2026',
+      SECTOR: '05. AMBIENTE',
       PLIEGO: s.pliego,
       PLIEGO_NOMBRE: s.pliegoNom,
       'UE CORTOS': s.ue,
@@ -400,14 +538,15 @@ const buildInitialSectorData = () => {
 export default function App() {
   const initialData = useMemo(() => buildInitialSectorData(), []);
 
-  // 1. Por defecto abre "Resumen Ejecutivo Sector"
-  const [tab, setTab] = useState('dashboard');
+  // Primera hoja por defecto: Ranking por Ministerios y Gobierno Nacional ('ranking')
+  const [tab, setTab] = useState('ranking');
+  const [rankingFilter, setRankingFilter] = useState<'general' | 'inversion' | 'proyecto'>('general');
+
   const [data, setData] = useState(initialData);
   const [minam005Data, setMinam005Data] = useState(() => initialData.filter((r) => r.PLIEGO.includes('005')));
   const [gobNacionalData, setGobNacionalData] = useState<any[]>([]);
 
   const [minam005FileName, setMinam005FileName] = useState('Resumen_SIAF_Pliego_Gasto.xlsx');
-  const [loadedFileName, setLoadedFileName] = useState('RESUMEN_BD_DATOS_ABIERTOS_MINAM.xlsx');
   const [gobNacFileName, setGobNacFileName] = useState('resumen_ejecucion_gobierno_nacional.xlsx');
 
   const [syncStatus, setSyncStatus] = useState({
@@ -415,7 +554,7 @@ export default function App() {
     datos_abiertos: 'En línea',
     gob_nacional: 'En línea',
   });
-  const [lastSyncTime, setLastSyncTime] = useState('21/10/2026');
+  const [lastSyncTime, setLastSyncTime] = useState('23/10/2026');
   const [loading, setLoading] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
   const [loadStage, setLoadStage] = useState('');
@@ -518,10 +657,6 @@ export default function App() {
     return isNaN(n) ? 0 : n;
   };
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // LECTOR INTELIGENTE DE COLUMNAS DE SHAREPOINT:
-  // Reconoce PLIEGO CORTO, UE CORTO, GG CONCAT, PP CONCAT, TOTAL_DEVENGADO, MONTO_PIM
-  // ═══════════════════════════════════════════════════════════════════════════
   const parseMatrixToNormalizedRows = useCallback((matrix: any[][], forcePliego005 = false) => {
     if (!matrix || matrix.length < 2) return [];
 
@@ -567,7 +702,7 @@ export default function App() {
       return '';
     };
 
-    // Prioriza exactamente las columnas indicadas: PLIEGO CORTO, UE CORTO, GG CONCAT, PP CONCAT
+    const colSector    = findCol('SECTOR', 'SECTOR_NOMBRE', 'MINISTERIO');
     const colPliego    = findCol('PLIEGO CORTO', 'PLIEGO_CORTO', 'PLIEGO', 'PLIEGO_NOMBRE', 'SECTOR');
     const colPliegoNom = findCol('PLIEGO_NOMBRE', 'PLIEGO CORTO', 'PLIEGO', 'SECTOR_NOMBRE');
     const colUe        = findCol('UE CORTO', 'UE_CORTO', 'UE CORTOS', 'UNIDAD_EJECUTORA', 'EJECUTORA_NOMBRE', 'EJECUTORA');
@@ -624,9 +759,11 @@ export default function App() {
       }
 
       const ueRaw = String(obj[colUe] || pRaw).trim();
+      const sectorRaw = String(obj[colSector] || '05. AMBIENTE').trim();
 
       const rowNorm: Record<string, any> = {
         ...obj,
+        SECTOR: sectorRaw,
         PLIEGO: pRaw,
         PLIEGO_NOMBRE: String(obj[colPliegoNom] || pRaw),
         'UE CORTOS': ueRaw,
@@ -681,9 +818,6 @@ export default function App() {
     return normalized;
   }, []);
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // SINCRONIZACIÓN AUTOMÁTICA CON SHAREPOINT AL ABRIR LA WEB
-  // ═══════════════════════════════════════════════════════════════════════════
   const syncAllFromSharePoint = useCallback(async () => {
     setLoading(true);
     setLoadProgress(25);
@@ -692,7 +826,6 @@ export default function App() {
     try {
       const XLSX: any = await ensureXLSX();
 
-      // 1. Resumen_SIAF_Pliego_Gasto.xlsx -> Pliego 005, VMGA y VMDERN
       try {
         const res005 = await fetch('/api/sharepoint?file=resumen005');
         if (res005.ok) {
@@ -713,7 +846,6 @@ export default function App() {
 
       setLoadProgress(60);
 
-      // 2. RESUMEN_BD_DATOS_ABIERTOS_MINAM.xlsx -> Resumen Ejecutivo Sector
       try {
         const resSec = await fetch('/api/sharepoint?file=datos_abiertos');
         if (resSec.ok) {
@@ -724,7 +856,6 @@ export default function App() {
           const rowsSec = parseMatrixToNormalizedRows(matrix, false);
           if (rowsSec.length > 0) {
             setData(rowsSec);
-            setLoadedFileName('RESUMEN_BD_DATOS_ABIERTOS_MINAM.xlsx');
             setSyncStatus((prev) => ({ ...prev, datos_abiertos: `Actualizado (${rowsSec.length} reg.)` }));
           }
         }
@@ -734,7 +865,6 @@ export default function App() {
 
       setLoadProgress(85);
 
-      // 3. resumen_ejecucion_gobierno_nacional.xlsx -> Gobierno Nacional
       try {
         const resGob = await fetch('/api/sharepoint?file=gob_nacional');
         if (resGob.ok) {
@@ -858,6 +988,86 @@ export default function App() {
     };
   }, [filteredData, cfg.mesCorteColProg, cfg.mesCorteColDev, cfg.mesCorteNum]);
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CÁLCULO DE RANKINGS EN EMBUDO (MINISTERIOS Y GOBIERNO NACIONAL / PLIEGOS)
+  // Con filtro dinámico: 'general' | 'inversion' | 'proyecto'
+  // ═══════════════════════════════════════════════════════════════════════════
+  const funnelMinisteriosData = useMemo(() => {
+    // Si resumen_ejecucion_gobierno_nacional.xlsx tiene filas con columna SECTOR, las agrupamos según el botón activo
+    if (gobNacionalData.length > 3) {
+      const map: Record<string, { name: string; pim: number; dev: number; isMinam: boolean }> = {};
+      gobNacionalData.forEach((r) => {
+        const tipo = String(r.TIPO_ACT_PROY_NOMBRE || '').toUpperCase();
+        const gg = String(r.GG_CONCAT || '').toUpperCase();
+        if (rankingFilter === 'inversion' && !tipo.includes('PROY') && !gg.includes('2.6')) return;
+        if (rankingFilter === 'proyecto' && !tipo.includes('PROY')) return;
+
+        const secName = String(r.SECTOR || r.PLIEGO_NOMBRE || r.PLIEGO || 'SECTOR').trim();
+        if (!map[secName]) {
+          const isMinam = /AMBIENT|MINAM|^0?5\./i.test(secName);
+          map[secName] = { name: secName, pim: 0, dev: 0, isMinam };
+        }
+        map[secName].pim += Number(r.MONTO_PIM) || 0;
+        map[secName].dev += Number(r.TOTAL_DEVENGADO) || 0;
+      });
+      const list = Object.values(map)
+        .filter((x) => x.pim > 0)
+        .map((x) => ({ ...x, pct: (x.dev / x.pim) * 100 }))
+        .sort((a, b) => b.pct - a.pct);
+      if (list.length > 0) return list;
+    }
+
+    // Respaldo con los Ministerios del Poder Ejecutivo + datos reales en vivo del Sector 05 Ambiente
+    return INITIAL_MINISTERIOS_RANKING.map((m) => {
+      if (m.isMinam && data.length > 0) {
+        let pimS = 0, devS = 0;
+        data.forEach((r) => {
+          const tipo = String(r.TIPO_ACT_PROY_NOMBRE || '').toUpperCase();
+          const gg = String(r.GG_CONCAT || '').toUpperCase();
+          if (rankingFilter === 'inversion' && !tipo.includes('PROY') && !gg.includes('2.6')) return;
+          if (rankingFilter === 'proyecto' && !tipo.includes('PROY')) return;
+          pimS += Number(r.MONTO_PIM) || 0;
+          devS += Number(r.TOTAL_DEVENGADO) || 0;
+        });
+        if (pimS > 0) {
+          return { name: m.sector, pim: pimS, dev: devS, pct: (devS / pimS) * 100, isMinam: true };
+        }
+      }
+      const pim = rankingFilter === 'general' ? m.pimGen : rankingFilter === 'inversion' ? m.pimInv : m.pimProy;
+      const dev = rankingFilter === 'general' ? m.devGen : rankingFilter === 'inversion' ? m.devInv : m.devProy;
+      return {
+        name: m.sector,
+        pim,
+        dev,
+        pct: pim > 0 ? (dev / pim) * 100 : 0,
+        isMinam: Boolean(m.isMinam),
+      };
+    }).sort((a, b) => b.pct - a.pct);
+  }, [gobNacionalData, data, rankingFilter]);
+
+  const funnelGobNacionalPliegos = useMemo(() => {
+    const source = data.length > 0 ? data : initialData;
+    const map: Record<string, { name: string; pim: number; dev: number; isMinam: boolean }> = {};
+    source.forEach((r) => {
+      const tipo = String(r.TIPO_ACT_PROY_NOMBRE || '').toUpperCase();
+      const gg = String(r.GG_CONCAT || '').toUpperCase();
+      if (rankingFilter === 'inversion' && !tipo.includes('PROY') && !gg.includes('2.6')) return;
+      if (rankingFilter === 'proyecto' && !tipo.includes('PROY')) return;
+
+      const k = r.PLIEGO || '005. MINAM';
+      if (!map[k]) {
+        const isMinam = String(k).includes('005') || String(k).toUpperCase().includes('MINAM');
+        map[k] = { name: k, pim: 0, dev: 0, isMinam };
+      }
+      map[k].pim += Number(r.MONTO_PIM) || 0;
+      map[k].dev += Number(r.TOTAL_DEVENGADO) || 0;
+    });
+    return Object.values(map)
+      .filter((x) => x.pim > 0)
+      .map((x) => ({ ...x, pct: (x.dev / x.pim) * 100 }))
+      .sort((a, b) => b.pct - a.pct);
+  }, [data, initialData, rankingFilter]);
+
   const pliegoChartData = useMemo(() => {
     const map: Record<string, any> = {};
     filteredData.forEach((r) => {
@@ -930,11 +1140,6 @@ export default function App() {
       const maxQ4Obj = q4Arr.reduce((best, cur) => (cur.val > best.val ? cur : best), q4Arr[0]);
       const totalQ4 = item.progOct + item.progNov + item.progDic;
 
-      let maxAnualIdx = 0;
-      item.progMeses.forEach((v: number, i: number) => {
-        if (v > item.progMeses[maxAnualIdx]) maxAnualIdx = i;
-      });
-
       const Avance = item.pim > 0 ? Number(((item.dev / item.pim) * 100).toFixed(1)) : 0;
       const pctMes = item.pm > 0 ? Number(((item.dm / item.pm) * 100).toFixed(1)) : 0;
       const pctOct = item.progOct > 0 ? Number(((item.devOct / item.progOct) * 100).toFixed(1)) : 0;
@@ -945,7 +1150,6 @@ export default function App() {
       const compNoDev  = Math.max(0, item.comp - item.dev);
       const promEneOct = item.dev / Math.max(1, cfg.mesCorteNum);
       const reqNovDic  = saldo / Math.max(1, 12 - cfg.mesCorteNum);
-      const aceleracion = promEneOct > 0 ? reqNovDic / promEneOct : 0;
 
       return {
         ...item,
@@ -960,16 +1164,9 @@ export default function App() {
         compNoDev,
         promEneOct,
         reqNovDic,
-        aceleracion,
         totalQ4,
         maxQ4Mes: maxQ4Obj.mes,
         maxQ4Short: maxQ4Obj.short,
-        maxQ4Val: maxQ4Obj.val,
-        pctOctInQ4: totalQ4 > 0 ? (item.progOct / totalQ4) * 100 : 0,
-        pctNovInQ4: totalQ4 > 0 ? (item.progNov / totalQ4) * 100 : 0,
-        pctDicInQ4: totalQ4 > 0 ? (item.progDic / totalQ4) * 100 : 0,
-        maxAnualIdx,
-        maxAnualMes: MESES_CONFIG[maxAnualIdx]?.label || 'Octubre',
       };
     };
 
@@ -985,16 +1182,11 @@ export default function App() {
           semAnual: semD(enriched.Avance),
           achieved: Math.min(p.dm, p.pm || p.dm),
           pending: Math.max(0, p.pm - p.dm),
-          // Solo conservamos Unidades Ejecutoras desagregadas para el Pliego 005. MINAM
           ueList: isMinam005
             ? Object.values(p.ues)
                 .map((u: any) => {
                   const eu = enrichPeakMonths(u);
-                  return {
-                    ...eu,
-                    sem: semM(eu.pctMes),
-                    semAnual: semD(eu.Avance),
-                  };
+                  return { ...eu, sem: semM(eu.pctMes), semAnual: semD(eu.Avance) };
                 })
                 .sort((a: any, b: any) => a.name.localeCompare(b.name))
             : [],
@@ -1003,7 +1195,6 @@ export default function App() {
       .sort((a: any, b: any) => a.name.localeCompare(b.name));
   }, [filteredData, cfg.mesCorteColProg, cfg.mesCorteColDev, cfg.mesCorteNum, semM, semD]);
 
-  // 4to Gráfico Relevante: Ejecución por Tipo de Gasto (Actividades vs Proyectos de Inversión)
   const tipoGastoChartData = useMemo(() => {
     const map: Record<string, any> = {};
     filteredData.forEach((r) => {
@@ -1015,14 +1206,10 @@ export default function App() {
       map[k].dev  += Number(r.TOTAL_DEVENGADO) || 0;
     });
     return Object.values(map)
-      .map((d: any) => ({
-        ...d,
-        Avance: d.pim > 0 ? Number(((d.dev / d.pim) * 100).toFixed(1)) : 0,
-      }))
+      .map((d: any) => ({ ...d, Avance: d.pim > 0 ? Number(((d.dev / d.pim) * 100).toFixed(1)) : 0 }))
       .sort((a: any, b: any) => b.pim - a.pim);
   }, [filteredData]);
 
-  // 5to Gráfico: Genérica de Gasto desde GG CONCAT (muestra TODAS las genéricas y % Avance = TOTAL_DEVENGADO / MONTO_PIM)
   const ggChartData = useMemo(() => {
     const map: Record<string, any> = {};
     filteredData.forEach((r) => {
@@ -1034,14 +1221,10 @@ export default function App() {
       map[k].dev  += Number(r.TOTAL_DEVENGADO) || 0;
     });
     return Object.values(map)
-      .map((d: any) => ({
-        ...d,
-        Avance: d.pim > 0 ? Number(((d.dev / d.pim) * 100).toFixed(1)) : 0,
-      }))
+      .map((d: any) => ({ ...d, Avance: d.pim > 0 ? Number(((d.dev / d.pim) * 100).toFixed(1)) : 0 }))
       .sort((a: any, b: any) => a.shortName.localeCompare(b.shortName));
   }, [filteredData]);
 
-  // 6to Gráfico: Programa Presupuestal desde PP CONCAT (AC 9001, APNOP 9002, PP 068...)
   const ppChartData = useMemo(() => {
     const map: Record<string, any> = {};
     filteredData.forEach((r) => {
@@ -1052,19 +1235,14 @@ export default function App() {
       map[k].dev  += Number(r.TOTAL_DEVENGADO) || 0;
     });
     return Object.values(map)
-      .map((d: any) => ({
-        ...d,
-        Avance: d.pim > 0 ? Number(((d.dev / d.pim) * 100).toFixed(1)) : 0,
-      }))
+      .map((d: any) => ({ ...d, Avance: d.pim > 0 ? Number(((d.dev / d.pim) * 100).toFixed(1)) : 0 }))
       .sort((a: any, b: any) => b.pim - a.pim);
   }, [filteredData]);
 
   const monthlySeries = useMemo(() => {
-    let acumProg = 0;
-    let acumDev = 0;
+    let acumProg = 0, acumDev = 0;
     return MESES_CONFIG.map((m) => {
-      let devM = 0;
-      let progM = 0;
+      let devM = 0, progM = 0;
       filteredData.forEach((r) => {
         devM  += Number(r[m.colDev]) || 0;
         progM += Number(r[m.colProg]) || 0;
@@ -1082,10 +1260,7 @@ export default function App() {
   }, [filteredData, progMode, cfg.mesCorteNum]);
 
   const multiYearData = useMemo(() => {
-    let pia23 = 0, pim23 = 0, dev23 = 0;
-    let pia24 = 0, pim24 = 0, dev24 = 0;
-    let pia25 = 0, pim25 = 0, dev25 = 0;
-    let poi27 = 0, poi28 = 0, poi29 = 0;
+    let pia23 = 0, pim23 = 0, dev23 = 0, pia24 = 0, pim24 = 0, dev24 = 0, pia25 = 0, pim25 = 0, dev25 = 0, poi27 = 0, poi28 = 0, poi29 = 0;
     filteredData.forEach((r) => {
       pia23 += Number(r.EJEC_2023_MONTO_PIA) || (Number(r.MONTO_PIA) || 0) * 0.82;
       pim23 += Number(r.EJEC_2023_MONTO_PIM) || (Number(r.MONTO_PIM) || 0) * 0.84;
@@ -1119,15 +1294,7 @@ export default function App() {
       if (!isProy) return;
       const k = r['NOMBRE CORTO INVER. CUI C'] !== '-' ? r['NOMBRE CORTO INVER. CUI C'] : `${r['UE CORTOS']} - ${r.ORGANO}`;
       if (!map[k]) {
-        map[k] = {
-          cui: k,
-          pliego: r.PLIEGO,
-          ue: r['UE CORTOS'],
-          dep: r.DEPENDENCIA,
-          depto: r.DEPARTAMENTO_META,
-          pia: 0, pim: 0, cert: 0, comp: 0, dev: 0,
-          progOct: 0, devOct: 0, progNov: 0, progDic: 0,
-        };
+        map[k] = { cui: k, pliego: r.PLIEGO, ue: r['UE CORTOS'], dep: r.DEPENDENCIA, depto: r.DEPARTAMENTO_META, pia: 0, pim: 0, cert: 0, comp: 0, dev: 0, progOct: 0, devOct: 0, progNov: 0, progDic: 0 };
       }
       map[k].pia     += Number(r.MONTO_PIA) || 0;
       map[k].pim     += Number(r.MONTO_PIM) || 0;
@@ -1140,16 +1307,11 @@ export default function App() {
       map[k].progDic += Number(r['PROGRAMACION DICIEMBRE']) || 0;
     });
     return Object.values(map)
-      .map((p: any) => ({
-        ...p,
-        Avance: p.pim > 0 ? (p.dev / p.pim) * 100 : 0,
-        AvanceOct: p.progOct > 0 ? (p.devOct / p.progOct) * 100 : 0,
-      }))
+      .map((p: any) => ({ ...p, Avance: p.pim > 0 ? (p.dev / p.pim) * 100 : 0, AvanceOct: p.progOct > 0 ? (p.devOct / p.progOct) * 100 : 0 }))
       .filter((p: any) => !cuiSearch || p.cui.toLowerCase().includes(cuiSearch.toLowerCase()) || p.ue.toLowerCase().includes(cuiSearch.toLowerCase()))
       .sort((a: any, b: any) => b.pim - a.pim);
   }, [minam005Data, filteredData, cuiSearch]);
 
-  // ANALÍTICA EXCLUSIVA DEL PLIEGO 005: MINISTERIO DEL AMBIENTE
   const filter005Options = useMemo(() => {
     const uniq = (k: string) => ['Todos', ...Array.from(new Set(minam005Data.map((r) => String(r[k] || '').trim()).filter(Boolean))).sort()];
     return {
@@ -1195,35 +1357,17 @@ export default function App() {
       const rDev  = Number(r.TOTAL_DEVENGADO) || 0;
       const rGir  = Number(r.MONTO_GIRADO) || rDev * 0.985;
 
-      pia  += rPia;
-      pim  += rPim;
-      cert += rCert;
-      comp += rComp;
-      dev  += rDev;
-      gir  += rGir;
-
+      pia += rPia; pim += rPim; cert += rCert; comp += rComp; dev += rDev; gir += rGir;
       progOct += Number(r[cfg.mesCorteColProg] ?? r['PROGRAMACION OCTUBRE']) || 0;
       devOct  += Number(r[cfg.mesCorteColDev]  ?? r['DEVENGADO_OCTUBRE']) || 0;
       progNov += Number(r['PROGRAMACION NOVIEMBRE']) || 0;
       progDic += Number(r['PROGRAMACION DICIEMBRE']) || 0;
 
       const ffUp = String(r.FF_CONCAT || '').toUpperCase();
-      if (ffUp.includes('ORDINARIOS') || ffUp.includes('1. RO')) {
-        pimRO += rPim;
-        devRO += rDev;
-      }
-      if (ffUp.includes('CREDITO') || ffUp.includes('ROOC')) {
-        pimROOC += rPim;
-        devROOC += rDev;
-      }
-
-      if (String(r.TIPO_ACT_PROY_NOMBRE || '').includes('PROY')) {
-        pimProy += rPim;
-        devProy += rDev;
-      } else {
-        pimAct += rPim;
-        devAct += rDev;
-      }
+      if (ffUp.includes('ORDINARIOS') || ffUp.includes('1. RO')) { pimRO += rPim; devRO += rDev; }
+      if (ffUp.includes('CREDITO') || ffUp.includes('ROOC')) { pimROOC += rPim; devROOC += rDev; }
+      if (String(r.TIPO_ACT_PROY_NOMBRE || '').includes('PROY')) { pimProy += rPim; devProy += rDev; }
+      else { pimAct += rPim; devAct += rDev; }
     });
 
     const pctCert = pim > 0 ? (cert / pim) * 100 : 0;
@@ -1236,19 +1380,17 @@ export default function App() {
     const noCert     = Math.max(0, pim - cert);
     const certNoComp = Math.max(0, cert - comp);
     const compNoDev  = Math.max(0, comp - dev);
-    const devNoGir   = Math.max(0, dev - gir);
     const saldo      = Math.max(0, pim - dev);
     const saldoRO    = Math.max(0, pimRO - devRO);
     const saldoROOC  = Math.max(0, pimROOC - devROOC);
-
-    const totalProgQ4  = progOct + progNov + progDic;
-    const pesoDicQ4    = totalProgQ4 > 0 ? (progDic / totalProgQ4) * 100 : 0;
+    const totalProgQ4 = progOct + progNov + progDic;
+    const pesoDicQ4   = totalProgQ4 > 0 ? (progDic / totalProgQ4) * 100 : 0;
 
     return {
       pia, pim, cert, comp, dev, gir, varPimPia,
       pctCert, pctComp, pctDev, pctGir, pctOct,
       progOct, devOct, progNov, progDic, totalProgQ4, pesoDicQ4,
-      noCert, certNoComp, compNoDev, devNoGir, saldo,
+      noCert, certNoComp, compNoDev, saldo,
       pimRO, devRO, saldoRO, pimROOC, devROOC, saldoROOC,
       pimAct, devAct, pctAct: pimAct > 0 ? (devAct / pimAct) * 100 : 0,
       pimProy, devProy, pctProy: pimProy > 0 ? (devProy / pimProy) * 100 : 0,
@@ -1260,55 +1402,32 @@ export default function App() {
     filtered005.forEach((r) => {
       const ue = r['UE CORTOS'] || '001. MINAM - ADM. GENERAL';
       if (!map[ue]) {
-        map[ue] = {
-          name: ue,
-          pia: 0, pim: 0, cert: 0, comp: 0, dev: 0, gir: 0,
-          progOct: 0, devOct: 0, progNov: 0, progDic: 0,
-          orgs: {},
-        };
+        map[ue] = { name: ue, pia: 0, pim: 0, cert: 0, comp: 0, dev: 0, gir: 0, progOct: 0, devOct: 0, progNov: 0, progDic: 0, orgs: {} };
       }
       const u = map[ue];
-      const rPia  = Number(r.MONTO_PIA) || 0;
-      const rPim  = Number(r.MONTO_PIM) || 0;
-      const rCert = Number(r.MONTO_CERTIFICADO) || 0;
-      const rComp = Number(r.MONTO_COMPROMETIDO_ANUAL) || 0;
-      const rDev  = Number(r.TOTAL_DEVENGADO) || 0;
-      const rGir  = Number(r.MONTO_GIRADO) || rDev * 0.985;
+      const rPia = Number(r.MONTO_PIA) || 0, rPim = Number(r.MONTO_PIM) || 0, rCert = Number(r.MONTO_CERTIFICADO) || 0;
+      const rComp = Number(r.MONTO_COMPROMETIDO_ANUAL) || 0, rDev = Number(r.TOTAL_DEVENGADO) || 0;
       const rPOct = Number(r[cfg.mesCorteColProg] ?? r['PROGRAMACION OCTUBRE']) || 0;
       const rDOct = Number(r[cfg.mesCorteColDev]  ?? r['DEVENGADO_OCTUBRE']) || 0;
-      const rPNov = Number(r['PROGRAMACION NOVIEMBRE']) || 0;
-      const rPDic = Number(r['PROGRAMACION DICIEMBRE']) || 0;
 
-      u.pia += rPia; u.pim += rPim; u.cert += rCert; u.comp += rComp; u.dev += rDev; u.gir += rGir;
-      u.progOct += rPOct; u.devOct += rDOct; u.progNov += rPNov; u.progDic += rPDic;
+      u.pia += rPia; u.pim += rPim; u.cert += rCert; u.comp += rComp; u.dev += rDev;
+      u.progOct += rPOct; u.devOct += rDOct;
 
       const orgKey = r.ORGANO || 'GENERAL';
       if (!u.orgs[orgKey]) {
-        u.orgs[orgKey] = {
-          name: orgKey,
-          dep: r.DEPENDENCIA,
-          uorg: r.U_ORGANICA,
-          pia: 0, pim: 0, cert: 0, comp: 0, dev: 0, gir: 0,
-          progOct: 0, devOct: 0, progNov: 0, progDic: 0,
-        };
+        u.orgs[orgKey] = { name: orgKey, dep: r.DEPENDENCIA, uorg: r.U_ORGANICA, pia: 0, pim: 0, cert: 0, comp: 0, dev: 0, progOct: 0, devOct: 0 };
       }
       const o = u.orgs[orgKey];
-      o.pia += rPia; o.pim += rPim; o.cert += rCert; o.comp += rComp; o.dev += rDev; o.gir += rGir;
-      o.progOct += rPOct; o.devOct += rDOct; o.progNov += rPNov; o.progDic += rPDic;
+      o.pia += rPia; o.pim += rPim; o.cert += rCert; o.comp += rComp; o.dev += rDev;
+      o.progOct += rPOct; o.devOct += rDOct;
     });
 
     const decorate = (item: any) => {
       const Avance = item.pim > 0 ? (item.dev / item.pim) * 100 : 0;
       const pctOct = item.progOct > 0 ? (item.devOct / item.progOct) * 100 : 0;
       const noCert = Math.max(0, item.pim - item.cert);
+      const porEjecutarOct = Math.max(0, item.progOct - item.devOct);
       const saldo = Math.max(0, item.pim - item.dev);
-      const totalQ4 = item.progOct + item.progNov + item.progDic;
-      const q4Opts = [
-        { mes: 'Octubre', short: 'OCT', val: item.progOct },
-        { mes: 'Noviembre', short: 'NOV', val: item.progNov },
-        { mes: 'Diciembre', short: 'DIC', val: item.progDic },
-      ];
-      const peak = q4Opts.reduce((b, c) => (c.val > b.val ? c : b), q4Opts[0]);
 
       return {
         ...item,
@@ -1317,13 +1436,8 @@ export default function App() {
         pctMes: pctOct,
         pctOct,
         noCert,
+        porEjecutarOct,
         saldo,
-        totalQ4,
-        maxQ4Mes: peak.mes,
-        maxQ4Short: peak.short,
-        pctOctInQ4: totalQ4 > 0 ? (item.progOct / totalQ4) * 100 : 0,
-        pctNovInQ4: totalQ4 > 0 ? (item.progNov / totalQ4) * 100 : 0,
-        pctDicInQ4: totalQ4 > 0 ? (item.progDic / totalQ4) * 100 : 0,
         sem: semM(pctOct),
         semAnual: semD(Avance),
         achieved: Math.min(item.devOct, item.progOct || item.devOct),
@@ -1335,15 +1449,10 @@ export default function App() {
     };
 
     return Object.values(map)
-      .map((u: any) => {
-        const du = decorate(u);
-        return {
-          ...du,
-          orgList: Object.values(u.orgs)
-            .map((o: any) => decorate(o))
-            .sort((a: any, b: any) => b.pim - a.pim),
-        };
-      })
+      .map((u: any) => ({
+        ...decorate(u),
+        orgList: Object.values(u.orgs).map((o: any) => decorate(o)).sort((a: any, b: any) => b.pim - a.pim),
+      }))
       .sort((a: any, b: any) => a.name.localeCompare(b.name));
   }, [filtered005, cfg.mesCorteColProg, cfg.mesCorteColDev, semM, semD]);
 
@@ -1351,32 +1460,21 @@ export default function App() {
     const map: Record<string, any> = {};
     filtered005.forEach((r) => {
       const k = r.ORGANO || 'SIN ÓRGANO';
-      if (!map[k]) {
-        map[k] = {
-          name: k,
-          shortName: k.split('·')[0].trim(),
-          pim: 0, cert: 0, comp: 0, dev: 0,
-        };
-      }
+      if (!map[k]) map[k] = { name: k, shortName: k.split('·')[0].trim(), pim: 0, cert: 0, comp: 0, dev: 0 };
       map[k].pim  += Number(r.MONTO_PIM) || 0;
       map[k].cert += Number(r.MONTO_CERTIFICADO) || 0;
       map[k].comp += Number(r.MONTO_COMPROMETIDO_ANUAL) || 0;
       map[k].dev  += Number(r.TOTAL_DEVENGADO) || 0;
     });
     return Object.values(map)
-      .map((d: any) => ({
-        ...d,
-        Avance: d.pim > 0 ? Number(((d.dev / d.pim) * 100).toFixed(1)) : 0,
-      }))
+      .map((d: any) => ({ ...d, Avance: d.pim > 0 ? Number(((d.dev / d.pim) * 100).toFixed(1)) : 0 }))
       .sort((a: any, b: any) => b.pim - a.pim);
   }, [filtered005]);
 
   const monthly005Series = useMemo(() => {
-    let acumP = 0;
-    let acumD = 0;
+    let acumP = 0, acumD = 0;
     return MESES_CONFIG.map((m) => {
-      let dM = 0;
-      let pM = 0;
+      let dM = 0, pM = 0;
       filtered005.forEach((r) => {
         dM += Number(r[m.colDev]) || 0;
         pM += Number(r[m.colProg]) || 0;
@@ -1397,14 +1495,7 @@ export default function App() {
     const map: Record<string, any> = {};
     filtered005.forEach((r) => {
       const k = r.ESPECIFICA_DET || r.GG_CONCAT || 'Clasificador SIAF';
-      if (!map[k]) {
-        map[k] = {
-          especifica: k,
-          gg: r.GG_CONCAT,
-          pia: 0, pim: 0, cert: 0, comp: 0, dev: 0,
-          progOct: 0, devOct: 0,
-        };
-      }
+      if (!map[k]) map[k] = { especifica: k, gg: r.GG_CONCAT, pia: 0, pim: 0, cert: 0, comp: 0, dev: 0, progOct: 0, devOct: 0 };
       map[k].pia     += Number(r.MONTO_PIA) || 0;
       map[k].pim     += Number(r.MONTO_PIM) || 0;
       map[k].cert    += Number(r.MONTO_CERTIFICADO) || 0;
@@ -1418,6 +1509,7 @@ export default function App() {
         ...e,
         Avance: e.pim > 0 ? (e.dev / e.pim) * 100 : 0,
         AvanceOct: e.progOct > 0 ? (e.devOct / e.progOct) * 100 : 0,
+        porEjecutarOct: Math.max(0, e.progOct - e.devOct),
         saldo: Math.max(0, e.pim - e.dev),
       }))
       .sort((a: any, b: any) => b.pim - a.pim);
@@ -1454,19 +1546,11 @@ export default function App() {
       dm  += Number(r[cfg.mesCorteColDev]) || 0;
 
       const o = r.ORGANO || 'SIN ÓRGANO';
-      if (!orgMap[o]) {
-        orgMap[o] = {
-          name: o,
-          uorg: r.U_ORGANICA,
-          pim: 0, dev: 0, pm: 0, dm: 0, progNov: 0, progDic: 0,
-        };
-      }
-      orgMap[o].pim     += Number(r.MONTO_PIM) || 0;
-      orgMap[o].dev     += Number(r.TOTAL_DEVENGADO) || 0;
-      orgMap[o].pm      += Number(r[cfg.mesCorteColProg]) || 0;
-      orgMap[o].dm      += Number(r[cfg.mesCorteColDev]) || 0;
-      orgMap[o].progNov += Number(r['PROGRAMACION NOVIEMBRE']) || 0;
-      orgMap[o].progDic += Number(r['PROGRAMACION DICIEMBRE']) || 0;
+      if (!orgMap[o]) orgMap[o] = { name: o, uorg: r.U_ORGANICA, pim: 0, dev: 0, pm: 0, dm: 0 };
+      orgMap[o].pim += Number(r.MONTO_PIM) || 0;
+      orgMap[o].dev += Number(r.TOTAL_DEVENGADO) || 0;
+      orgMap[o].pm  += Number(r[cfg.mesCorteColProg]) || 0;
+      orgMap[o].dm  += Number(r[cfg.mesCorteColDev]) || 0;
     });
 
     const orgList = Object.values(orgMap).map((o: any) => ({
@@ -1492,11 +1576,11 @@ export default function App() {
               <div style={{ fontSize: 18, fontWeight: 900 }}>{fmtM(pim)}</div>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.16)', padding: '10px 16px', borderRadius: 14 }}>
-              <div style={{ fontSize: 10, opacity: 0.85 }}>Devengado Acum. (Ene–{cfg.mesCorteLabel.slice(0, 3)})</div>
+              <div style={{ fontSize: 10, opacity: 0.85 }}>Devengado Acum.</div>
               <div style={{ fontSize: 18, fontWeight: 900 }}>{fmtM(dev)} ({pctDev.toFixed(1)}%)</div>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.22)', padding: '10px 16px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.35)' }}>
-              <div style={{ fontSize: 10, fontWeight: 800 }}>Avance Mes {cfg.mesCorteLabel} (Dev vs Prog)</div>
+              <div style={{ fontSize: 10, fontWeight: 800 }}>Avance Mes {cfg.mesCorteLabel}</div>
               <div style={{ fontSize: 18, fontWeight: 900 }}>{pctMes.toFixed(1)}% ({fmtC(dm)} / {fmtC(pm)})</div>
             </div>
           </div>
@@ -1547,10 +1631,15 @@ export default function App() {
     );
   };
 
+  const minamRankPos = useMemo(() => {
+    const idx = funnelMinisteriosData.findIndex((x) => x.isMinam);
+    return idx >= 0 ? idx + 1 : 7;
+  }, [funnelMinisteriosData]);
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f1f5f9', fontFamily: 'Inter, system-ui, -apple-system, sans-serif', color: THEME_DARKEST }}>
       {/* SIDEBAR INSTITUCIONAL */}
-      <aside style={{ width: 265, background: THEME_DARKEST, color: 'white', padding: '18px 14px', display: 'flex', flexDirection: 'column', gap: 5, flexShrink: 0 }}>
+      <aside style={{ width: 268, background: THEME_DARKEST, color: 'white', padding: '18px 14px', display: 'flex', flexDirection: 'column', gap: 5, flexShrink: 0 }}>
         {/* LOGO PERÚ / MINAM INTACTO */}
         <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 13, marginBottom: 8, border: '1px solid rgba(255,255,255,0.1)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1564,9 +1653,10 @@ export default function App() {
           </div>
         </div>
 
-        {/* ORDEN 1 AL 5 */}
         <div style={{ fontSize: 9.5, fontWeight: 800, color: '#7F898A', textTransform: 'uppercase', letterSpacing: 1.4, padding: '4px 10px' }}>Monitoreo Sectorial</div>
-        <NBtn active={tab === 'dashboard'} onClick={() => setTab('dashboard')} icon={LayoutDashboard} label="Resumen Ejecutivo Sector" badge="OCT" badgeColor={THEME_LIGHT_BLUE} />
+        {/* NUEVA PRIMERA HOJA: RANKING MINISTERIOS Y GOBIERNO NACIONAL */}
+        <NBtn active={tab === 'ranking'} onClick={() => setTab('ranking')} icon={Award} label="Ranking Ministerios y Gob. Nac." badge="TOP" badgeColor={THEME_GOLD} />
+        <NBtn active={tab === 'dashboard'} onClick={() => setTab('dashboard')} icon={LayoutDashboard} label="Resumen Ejecutivo Sector" badge="OCT 🎃" badgeColor={THEME_ORANGE} />
         <NBtn active={tab === 'minam005'} onClick={() => setTab('minam005')} icon={Building2} label="Pliego 005 · MINAM (SIAF)" badge="SIAF" badgeColor={THEME_GOLD} />
         <NBtn active={tab === 'octubre'} onClick={() => setTab('octubre')} icon={Target} label={`Avance ${cfg.mesCorteLabel} y Mapa IV Trim.`} badge="PICO MES" badgeColor={THEME_CYAN} />
         <NBtn active={tab === 'presupuestologo'} onClick={() => setTab('presupuestologo')} icon={Gauge} label="Análisis Presupuestólogo" badge="BRECHAS" badgeColor={THEME_GOLD} />
@@ -1578,7 +1668,7 @@ export default function App() {
 
         <div style={{ fontSize: 9.5, fontWeight: 800, color: '#7F898A', textTransform: 'uppercase', letterSpacing: 1.4, padding: '10px 10px 4px' }}>Focalización y Datos</div>
         <NBtn active={tab === 'inv'} onClick={() => setTab('inv')} icon={HardHat} label="Inversiones CUI / Proyectos" />
-        <NBtn active={tab === 'gobnac'} onClick={() => setTab('gobnac')} icon={Globe} label="Ejecución Gobierno Nacional" badge="GN" badgeColor={THEME_CYAN} />
+        <NBtn active={tab === 'gobnac'} onClick={() => setTab('gobnac')} icon={Globe} label="Base Gobierno Nacional" badge="GN" badgeColor={THEME_CYAN} />
         <NBtn active={tab === 'inter'} onClick={() => setTab('inter')} icon={TrendingUp} label="Histórico y POI 2023–2029" />
         <NBtn active={tab === 'explorer'} onClick={() => setTab('explorer')} icon={Database} label="Explorador Multidimensional" />
 
@@ -1592,20 +1682,15 @@ export default function App() {
 
       {/* CONTENIDO PRINCIPAL */}
       <main style={{ flex: 1, padding: '18px 22px', overflowY: 'auto', maxWidth: '100%' }}>
-        {/* ═════════════════════════════════════════════════════════════════════
-            CABECERA SUPERIOR MEJORADA (IMAGEN 1):
-            - Sin los dos badges tachados
-            - Título "Tablero: Sector Ambiental - MINAM" con fondo resaltado y letras gorditas
-            - "Fuente: Datos Abiertos" debajo de "Última actualización"
-           ═════════════════════════════════════════════════════════════════════ */}
+        {/* CABECERA SUPERIOR */}
         <div style={{ background: 'white', borderRadius: 20, padding: '14px 20px', marginBottom: 14, border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
           <div
             onDoubleClick={syncAllFromSharePoint}
             style={{
-              background: `linear-gradient(135deg, ${THEME_PETROL} 0%, ${THEME_TEAL_DARK} 100%)`,
-              padding: '12px 22px',
+              background: VMGA_GRADIENT,
+              padding: '12px 24px',
               borderRadius: 14,
-              boxShadow: '0 4px 14px rgba(27,77,92,0.22)',
+              boxShadow: '0 4px 16px rgba(27,77,92,0.24)',
               display: 'inline-flex',
               alignItems: 'center',
               gap: 12,
@@ -1642,8 +1727,84 @@ export default function App() {
           </div>
         )}
 
-        {/* BARRA DE FILTROS MULTIDIMENSIONALES */}
-        {tab !== 'minam005' && tab !== 'gobnac' && (
+        {/* ═════════════════════════════════════════════════════════════════════
+            NUEVA PRIMERA HOJA: RANKING POR MINISTERIOS Y GOBIERNO NACIONAL
+            Con botones General | Inversión | Proyecto y Embudos con resaltado MINAM
+           ═════════════════════════════════════════════════════════════════════ */}
+        {tab === 'ranking' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            {/* BANNER EJECUTIVO + BOTONES DE FILTRO GENERAL / INVERSIÓN / PROYECTO */}
+            <div style={{ background: OCT_GRADIENT, borderRadius: 22, padding: '20px 24px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, boxShadow: '0 8px 26px rgba(27,77,92,0.2)' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{ background: THEME_GREEN, color: 'white', fontWeight: 900, fontSize: 10, padding: '3px 9px', borderRadius: 6 }}>
+                    ★ SECTOR 05. AMBIENTE: PUESTO #{minamRankPos} NACIONAL
+                  </span>
+                  <span style={{ background: 'rgba(255,255,255,0.14)', color: THEME_LIGHT_BLUE, fontWeight: 800, fontSize: 10, padding: '3px 9px', borderRadius: 6 }}>
+                    CORTE OCTUBRE 2026 🎃
+                  </span>
+                </div>
+                <h2 style={{ fontSize: 21, fontWeight: 900, margin: 0 }}>
+                  Ranking de Ejecución Presupuestal: Ministerios y Gobierno Nacional (SIAF 2026)
+                </h2>
+                <p style={{ fontSize: 12, opacity: 0.9, margin: '4px 0 0' }}>
+                  Comparativo en embudo del porcentaje de avance devengado sobre PIM · Resaltado especial para el Sector Ambiental y sus Pliegos Adscritos.
+                </p>
+              </div>
+
+              {/* BOTONES SELECTORES: GENERAL | INVERSIÓN | PROYECTO */}
+              <div style={{ display: 'flex', gap: 8, background: 'rgba(255,255,255,0.1)', padding: 6, borderRadius: 14, border: '1px solid rgba(255,255,255,0.2)' }}>
+                {[
+                  { id: 'general', lbl: 'General (Total)' },
+                  { id: 'inversion', lbl: 'Inversión' },
+                  { id: 'proyecto', lbl: 'Proyecto' },
+                ].map((btn) => {
+                  const active = rankingFilter === btn.id;
+                  return (
+                    <button
+                      key={btn.id}
+                      onClick={() => setRankingFilter(btn.id as any)}
+                      style={{
+                        padding: '9px 16px',
+                        borderRadius: 10,
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        fontWeight: 900,
+                        background: active ? HALLOWEEN_GRAD : 'transparent',
+                        color: active ? '#ffffff' : '#e2e8f0',
+                        boxShadow: active ? '0 4px 12px rgba(242,92,5,0.4)' : 'none',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {btn.lbl}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* DOS EMBUDOS LADO A LADO: 1) RANKING POR MINISTERIOS Y 2) RANKING GOBIERNO NACIONAL / PLIEGOS */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))', gap: 18 }}>
+              <FunnelRankingCard
+                grad={VMGA_GRADIENT}
+                title={`Ranking por Ministerios · Poder Ejecutivo (${rankingFilter === 'general' ? 'General' : rankingFilter === 'inversion' ? 'Inversión' : 'Proyectos'})`}
+                sub="Ordenado de mayor a menor % de ejecución presupuestal (Destacando Sector 05. Ambiente)"
+                items={funnelMinisteriosData}
+              />
+
+              <FunnelRankingCard
+                grad={VMDERN_GRADIENT}
+                title={`Ranking por Gobierno Nacional · Pliegos (${rankingFilter === 'general' ? 'General' : rankingFilter === 'inversion' ? 'Inversión' : 'Proyectos'})`}
+                sub="Desempeño comparativo de Pliegos Presupuestales (Destacando Pliego 005. MINAM)"
+                items={funnelGobNacionalPliegos}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* BARRA DE FILTROS MULTIDIMENSIONALES PARA LAS VISTAS SECTORIALES */}
+        {tab !== 'ranking' && tab !== 'minam005' && tab !== 'gobnac' && (
           <div style={{ background: 'white', borderRadius: 18, padding: '11px 16px', marginBottom: 16, border: '1px solid #e2e8f0', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 900, color: THEME_TEAL_DARK, marginRight: 4 }}>
               <Filter size={14} /> FILTROS:
@@ -1682,61 +1843,19 @@ export default function App() {
         )}
 
         {/* ═════════════════════════════════════════════════════════════════════
-            VISTA 1: RESUMEN EJECUTIVO SECTOR
+            VISTA: RESUMEN EJECUTIVO SECTOR (CON CALABAZA AL LADO DE OCTUBRE)
            ═════════════════════════════════════════════════════════════════════ */}
         {tab === 'dashboard' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* TARJETAS KPI CON SUS COLORES PROPIOS INTACTOS */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))', gap: 12 }}>
               {[
-                {
-                  lbl: 'PIM 2026 (MARCO VIGENTE)',
-                  val: fmtM(kpis.pim),
-                  sub: `PIA: ${fmtM(kpis.pia)} (+${kpis.pia > 0 ? (((kpis.pim - kpis.pia) / kpis.pia) * 100).toFixed(1) : 0}%)`,
-                  col: '#1565C0',
-                  bg: '#ffffff',
-                  brd: '#cbd5e1',
-                },
-                {
-                  lbl: 'CERTIFICADO ACUMULADO',
-                  val: fmtM(kpis.cert),
-                  sub: `${kpis.pctCert.toFixed(1)}% del PIM | Sin Cert: ${fmtC(kpis.brechaNoCertificado)}`,
-                  col: '#0288D1',
-                  bg: '#ffffff',
-                  brd: '#cbd5e1',
-                },
-                {
-                  lbl: 'COMPROMISO ANUAL',
-                  val: fmtM(kpis.comp),
-                  sub: `${kpis.pctComp.toFixed(1)}% del PIM | Por Comp: ${fmtC(kpis.brechaCertNoComp)}`,
-                  col: '#6d28d9',
-                  bg: '#ffffff',
-                  brd: '#cbd5e1',
-                },
-                {
-                  lbl: `DEVENGADO ACUM. (ENE–${cfg.mesCorteLabel.slice(0, 3).toUpperCase()})`,
-                  val: fmtM(kpis.dev),
-                  sub: `${kpis.pctDev.toFixed(1)}% de Ejecución Anual`,
-                  col: '#047857',
-                  bg: '#ecfdf5',
-                  brd: '#6ee7b7',
-                },
-                {
-                  lbl: `AVANCE MES ${cfg.mesCorteLabel.toUpperCase()}`,
-                  val: `${kpis.pctMes.toFixed(1)}%`,
-                  sub: `Dev: ${fmtC(kpis.devMes)} / Prog: ${fmtC(kpis.progMes)}`,
-                  col: '#1e3a8a',
-                  bg: '#dbeafe',
-                  brd: '#60a5fa',
-                },
-                {
-                  lbl: 'SALDO POR DEVENGAR (NOV–DIC)',
-                  val: fmtM(kpis.saldo),
-                  sub: `${(100 - kpis.pctDev).toFixed(1)}% restante | RO: ${fmtC(kpis.saldoRO)}`,
-                  col: '#be123c',
-                  bg: '#fff1f2',
-                  brd: '#fda4af',
-                },
+                { lbl: 'PIM 2026 (MARCO VIGENTE)', val: fmtM(kpis.pim), sub: `PIA: ${fmtM(kpis.pia)} (+${kpis.pia > 0 ? (((kpis.pim - kpis.pia) / kpis.pia) * 100).toFixed(1) : 0}%)`, col: '#1565C0', bg: '#ffffff', brd: '#cbd5e1' },
+                { lbl: 'CERTIFICADO ACUMULADO', val: fmtM(kpis.cert), sub: `${kpis.pctCert.toFixed(1)}% del PIM | Sin Cert: ${fmtC(kpis.brechaNoCertificado)}`, col: '#0288D1', bg: '#ffffff', brd: '#cbd5e1' },
+                { lbl: 'COMPROMISO ANUAL', val: fmtM(kpis.comp), sub: `${kpis.pctComp.toFixed(1)}% del PIM | Por Comp: ${fmtC(kpis.brechaCertNoComp)}`, col: '#6d28d9', bg: '#ffffff', brd: '#cbd5e1' },
+                { lbl: `DEVENGADO ACUM. (ENE–${cfg.mesCorteLabel.slice(0, 3).toUpperCase()})`, val: fmtM(kpis.dev), sub: `${kpis.pctDev.toFixed(1)}% de Ejecución Anual`, col: '#047857', bg: '#ecfdf5', brd: '#6ee7b7' },
+                { lbl: `AVANCE MES ${cfg.mesCorteLabel.toUpperCase()}`, val: `${kpis.pctMes.toFixed(1)}%`, sub: `Dev: ${fmtC(kpis.devMes)} / Prog: ${fmtC(kpis.progMes)}`, col: '#1e3a8a', bg: '#dbeafe', brd: '#60a5fa' },
+                { lbl: 'SALDO POR DEVENGAR (NOV–DIC)', val: fmtM(kpis.saldo), sub: `${(100 - kpis.pctDev).toFixed(1)}% restante | RO: ${fmtC(kpis.saldoRO)}`, col: '#be123c', bg: '#fff1f2', brd: '#fda4af' },
               ].map((c, i) => (
                 <div key={i} style={{ background: c.bg, padding: '14px 16px', borderRadius: 18, border: `1.5px solid ${c.brd}`, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                   <div style={{ fontSize: 9.5, fontWeight: 900, color: '#475569', letterSpacing: 0.8 }}>{c.lbl}</div>
@@ -1746,7 +1865,7 @@ export default function App() {
               ))}
             </div>
 
-            {/* VELOCÍMETROS COMPACTOS + TERMÓMETRO DE LA CADENA DE GASTO (IMAGEN 2) */}
+            {/* VELOCÍMETROS COMPACTOS + TERMÓMETRO DE LA CADENA DE GASTO */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: 14, alignItems: 'stretch' }}>
               <GaugeKPI
                 pct={kpis.pctDev}
@@ -1768,18 +1887,13 @@ export default function App() {
                 thresholds={[cfg.semMesMedio, cfg.semMesAlto]}
               />
 
-              <GCard
-                grad={OCT_GRADIENT}
-                icon={Activity}
-                title={`Termómetro de la Cadena de Gasto SIAF (${cfg.mesCorteLabel})`}
-                sub="Cuellos de botella presupuestales antes del cierre anual"
-              >
+              <GCard grad={OCT_GRADIENT} icon={Activity} title={`Termómetro de la Cadena de Gasto SIAF (${cfg.mesCorteLabel})`} sub="Cuellos de botella presupuestales antes del cierre anual">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {[
-                    { stage: '1. Certificado vs PIM', val: kpis.cert, pct: kpis.pctCert, col: THEME_BLUE, gapLbl: `Sin cert.: ${fmtC(kpis.brechaNoCertificado)}` },
-                    { stage: '2. Compromiso vs PIM', val: kpis.comp, pct: kpis.pctComp, col: THEME_TEAL_DARK, gapLbl: `Sin comp.: ${fmtC(kpis.brechaCertNoComp)}` },
-                    { stage: `3. Devengado vs PIM`, val: kpis.dev, pct: kpis.pctDev, col: THEME_GREEN, gapLbl: `Por dev.: ${fmtC(kpis.brechaCompNoDev)}` },
-                    { stage: `4. Avance ${cfg.mesCorteLabel}`, val: kpis.devMes, pct: kpis.pctMes, col: THEME_ORANGE, gapLbl: `Brecha Oct: ${fmtC(Math.max(0, kpis.progMes - kpis.devMes))}` },
+                    { stage: '1. Certificado vs PIM', pct: kpis.pctCert, col: THEME_BLUE, gapLbl: `Sin cert.: ${fmtC(kpis.brechaNoCertificado)}` },
+                    { stage: '2. Compromiso vs PIM', pct: kpis.pctComp, col: THEME_TEAL_DARK, gapLbl: `Sin comp.: ${fmtC(kpis.brechaCertNoComp)}` },
+                    { stage: '3. Devengado vs PIM', pct: kpis.pctDev, col: THEME_GREEN, gapLbl: `Por dev.: ${fmtC(kpis.brechaCompNoDev)}` },
+                    { stage: `4. Avance ${cfg.mesCorteLabel}`, pct: kpis.pctMes, col: THEME_ORANGE, gapLbl: `Brecha Oct: ${fmtC(Math.max(0, kpis.progMes - kpis.devMes))}` },
                   ].map((b, idx) => (
                     <div key={idx} style={{ background: '#f8fafc', padding: '7px 10px', borderRadius: 10, border: '1px solid #e2e8f0' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 800, marginBottom: 3 }}>
@@ -1796,14 +1910,9 @@ export default function App() {
               </GCard>
             </div>
 
-            {/* GRÁFICOS POR PLIEGO CON ETIQUETAS DE DATOS Y LEYENDA MÁS ABAJO (IMAGEN 3) */}
+            {/* GRÁFICOS POR PLIEGO CON ETIQUETAS DE DATOS */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(430px, 1fr))', gap: 16 }}>
-              <GCard
-                grad={VMGA_GRADIENT}
-                icon={BarChart3}
-                title={`Ejecución Anual Acumulada a ${cfg.mesCorteLabel} por Pliego`}
-                sub="Comparativo PIM vs Certificado vs Devengado y % de Avance Anual"
-              >
+              <GCard grad={VMGA_GRADIENT} icon={BarChart3} title={`Ejecución Anual Acumulada a ${cfg.mesCorteLabel} por Pliego`} sub="Comparativo PIM vs Certificado vs Devengado y % de Avance Anual">
                 <div style={{ height: 305 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={pliegoChartData} margin={{ top: 22, right: 16, left: 0, bottom: 28 }}>
@@ -1814,7 +1923,7 @@ export default function App() {
                       <Tooltip content={<TTip />} />
                       <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: 10.5, paddingTop: 18 }} />
                       <Bar yAxisId="left" dataKey="pim" name="PIM 2026" fill={THEME_LIGHT_BLUE} radius={[4, 4, 0, 0]} />
-                      <Bar yAxisId="left" dataKey="cert" name="Certificado" fill={THEME_CYAN} radius={[4, 4, 0, 0]} />
+                      <Bar yAxisId="left" dataKey="cert" name="Certificado" fill={THEME_TURQUOISE} radius={[4, 4, 0, 0]} />
                       <Bar yAxisId="left" dataKey="dev" name={`Devengado a ${cfg.mesCorteLabel}`} fill={THEME_BLUE} radius={[4, 4, 0, 0]} />
                       <Line yAxisId="right" type="monotone" dataKey="Avance" name="% Avance PIM" stroke={THEME_GREEN} strokeWidth={2.5} dot={{ r: 4 }}>
                         <LabelList dataKey="Avance" position="top" offset={8} formatter={(v: any) => `${Number(v).toFixed(1)}%`} style={{ fontSize: 9.5, fontWeight: 900, fill: THEME_FOREST }} />
@@ -1824,13 +1933,7 @@ export default function App() {
                 </div>
               </GCard>
 
-              <GCard
-                grad={OCT_GRADIENT}
-                icon={Target}
-                title={`Ejecución del Mes de ${cfg.mesCorteLabel} por Pliego (Devengado vs Programado)`}
-                sub={`Comparativo directo de PROGRAMACION ${cfg.mesCorteLabel.toUpperCase()} y DEVENGADO_${cfg.mesCorteLabel.toUpperCase()}`}
-                badge={`CORTE ${cfg.mesCorteLabel.toUpperCase()}`}
-              >
+              <GCard grad={OCT_GRADIENT} icon={Target} title={`Ejecución del Mes de ${cfg.mesCorteLabel} por Pliego (Devengado vs Programado)`} sub={`Comparativo directo de PROGRAMACION ${cfg.mesCorteLabel.toUpperCase()} y DEVENGADO_${cfg.mesCorteLabel.toUpperCase()}`} badge={`CORTE ${cfg.mesCorteLabel.toUpperCase()} 🎃`}>
                 <div style={{ height: 305 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={pliegoChartData} margin={{ top: 22, right: 16, left: 0, bottom: 28 }}>
@@ -1851,15 +1954,9 @@ export default function App() {
               </GCard>
             </div>
 
-            {/* GRÁFICOS 4, 5 Y 6 MEJORADOS (IMÁGENES 4, 5 Y 6) */}
+            {/* GRÁFICOS 4, 5 Y 6 */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
-              {/* 4to GRÁFICO NUEVO: EJECUCIÓN POR TIPO DE GASTO (ACTIVIDADES VS PROYECTOS) */}
-              <GCard
-                grad={VMDERN_GRADIENT}
-                icon={HardHat}
-                title="Ejecución por Tipo: Actividades vs Proyectos"
-                sub="Comparativo de Gasto Operativo (Actividades) vs Inversión (Proyectos)"
-              >
+              <GCard grad={VMDERN_GRADIENT} icon={HardHat} title="Ejecución por Tipo: Actividades vs Proyectos" sub="Comparativo de Gasto Operativo (Actividades) vs Inversión (Proyectos)">
                 <div style={{ height: 280 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={tipoGastoChartData} margin={{ top: 22, right: 16, left: 0, bottom: 20 }}>
@@ -1880,13 +1977,7 @@ export default function App() {
                 </div>
               </GCard>
 
-              {/* 5to GRÁFICO MEJORADO: TODAS LAS GENÉRICAS DE GASTO (GG CONCAT) + ETIQUETAS DE % AVANCE */}
-              <GCard
-                grad={OCT_GRADIENT}
-                icon={Layers}
-                title="Estructura por Genérica de Gasto (GG CONCAT)"
-                sub="Todas las Genéricas de Gasto y % Avance (TOTAL_DEVENGADO / MONTO_PIM)"
-              >
+              <GCard grad={OCT_GRADIENT} icon={Layers} title="Estructura por Genérica de Gasto (GG CONCAT)" sub="Todas las Genéricas de Gasto y % Avance (TOTAL_DEVENGADO / MONTO_PIM)">
                 <div style={{ height: 280 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={ggChartData} margin={{ top: 22, right: 16, left: 0, bottom: 26 }}>
@@ -1906,13 +1997,7 @@ export default function App() {
                 </div>
               </GCard>
 
-              {/* 6to GRÁFICO MEJORADO: PROGRAMA PRESUPUESTAL DESDE PP CONCAT (AC 9001, APNOP 9002, PP 068...) */}
-              <GCard
-                grad={VMGA_GRADIENT}
-                icon={FolderKanban}
-                title="Ejecución por Programa Presupuestal (PP)"
-                sub="Categorías presupuestales (PP 036, PP 068, AC 9001, APNOP 9002)"
-              >
+              <GCard grad={VMGA_GRADIENT} icon={FolderKanban} title="Ejecución por Programa Presupuestal (PP)" sub="Categorías presupuestales (PP 036, PP 068, AC 9001, APNOP 9002)">
                 <div style={{ height: 280 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={ppChartData} margin={{ top: 22, right: 16, left: 0, bottom: 26 }}>
@@ -1933,12 +2018,7 @@ export default function App() {
               </GCard>
             </div>
 
-            {/* ═════════════════════════════════════════════════════════════════
-                MATRIZ MAESTRA (IMAGEN 7):
-                - Pliegos de PLIEGO CORTO y UEs de UE CORTO (Solo 005. MINAM despliega UEs)
-                - Bloque superior naranja Halloween "OCTUBRE" sin chocar con nada
-                - Incluye "Monto por Ejecutar Octubre" y elimina "Mes Pico IV Trim."
-               ═════════════════════════════════════════════════════════════════ */}
+            {/* MATRIZ MAESTRA CON ENCABEZADO NARANJA "OCTUBRE 🎃" */}
             <GCard
               full
               grad={VMGA_GRADIENT}
@@ -1950,58 +2030,17 @@ export default function App() {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.2 }}>
                   <thead>
-                    {/* FILA SUPERIOR DE AGRUPACIÓN CON LA FRANJA NARANJA "OCTUBRE" */}
                     <tr>
-                      <th
-                        colSpan={6}
-                        style={{
-                          background: '#141a1c',
-                          color: '#cbd5e1',
-                          padding: '7px 12px',
-                          fontSize: 10,
-                          fontWeight: 900,
-                          letterSpacing: 1.2,
-                          textAlign: 'left',
-                          borderRadius: '10px 0 0 0',
-                          borderBottom: '1px solid #334155',
-                        }}
-                      >
+                      <th colSpan={6} style={{ background: '#141a1c', color: '#cbd5e1', padding: '8px 12px', fontSize: 10, fontWeight: 900, letterSpacing: 1.2, textAlign: 'left', borderRadius: '10px 0 0 0', borderBottom: '1px solid #334155' }}>
                         EJECUCIÓN PRESUPUESTAL ANUAL 2026 (PLIEGO CORTO / UE CORTO)
                       </th>
-                      <th
-                        colSpan={4}
-                        style={{
-                          background: HALLOWEEN_GRAD,
-                          color: '#ffffff',
-                          padding: '7px 12px',
-                          fontSize: 11,
-                          fontWeight: 900,
-                          letterSpacing: 1.8,
-                          textAlign: 'center',
-                          borderLeft: '2px solid #ffffff',
-                          borderRight: '2px solid #ffffff',
-                          boxShadow: 'inset 0 -2px 0 rgba(0,0,0,0.15)',
-                        }}
-                      >
-                        OCTUBRE
+                      <th colSpan={4} style={{ background: HALLOWEEN_GRAD, color: '#ffffff', padding: '8px 12px', fontSize: 11.5, fontWeight: 900, letterSpacing: 1.8, textAlign: 'center', borderLeft: '2px solid #ffffff', borderRight: '2px solid #ffffff' }}>
+                        <PumpkinBadge />
                       </th>
-                      <th
-                        style={{
-                          background: '#141a1c',
-                          color: '#cbd5e1',
-                          padding: '7px 10px',
-                          fontSize: 10,
-                          fontWeight: 900,
-                          textAlign: 'right',
-                          borderRadius: '0 10px 0 0',
-                          borderBottom: '1px solid #334155',
-                        }}
-                      >
+                      <th style={{ background: '#141a1c', color: '#cbd5e1', padding: '8px 10px', fontSize: 10, fontWeight: 900, textAlign: 'right', borderRadius: '0 10px 0 0', borderBottom: '1px solid #334155' }}>
                         CIERRE ANUAL
                       </th>
                     </tr>
-
-                    {/* FILA DE ENCABEZADOS DE COLUMNA */}
                     <tr style={{ background: THEME_DARKEST, color: 'white', textAlign: 'left' }}>
                       <th style={{ padding: '11px 12px' }}>Pliego / Unidad Ejecutora</th>
                       <th style={{ padding: '11px 10px', textAlign: 'right' }}>PIM 2026</th>
@@ -2027,19 +2066,10 @@ export default function App() {
                         <React.Fragment key={p.name}>
                           <tr
                             onClick={() => canExpand && togglePliegoCollapse(p.name)}
-                            style={{
-                              background: '#f8fafc',
-                              borderBottom: '1px solid #cbd5e1',
-                              cursor: canExpand ? 'pointer' : 'default',
-                              fontWeight: 800,
-                            }}
+                            style={{ background: '#f8fafc', borderBottom: '1px solid #cbd5e1', cursor: canExpand ? 'pointer' : 'default', fontWeight: 800 }}
                           >
                             <td style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 6, color: THEME_DARKEST }}>
-                              {canExpand ? (
-                                isCollapsed ? <ChevronRight size={15} color={THEME_ORANGE} /> : <ChevronDown size={15} color={THEME_ORANGE} />
-                              ) : (
-                                <span style={{ width: 15, display: 'inline-block' }} />
-                              )}
+                              {canExpand ? (isCollapsed ? <ChevronRight size={15} color={THEME_ORANGE} /> : <ChevronDown size={15} color={THEME_ORANGE} />) : <span style={{ width: 15, display: 'inline-block' }} />}
                               {p.name}
                             </td>
                             <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace' }}>{fmt(p.pim)}</td>
@@ -2047,28 +2077,17 @@ export default function App() {
                             <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace' }}>{fmt(p.comp)}</td>
                             <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', color: THEME_TEAL_DARK }}>{fmt(p.dev)}</td>
                             <td style={{ padding: '10px 10px', textAlign: 'center' }}>
-                              <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 900, background: sAnual.bg, color: sAnual.col, border: `1px solid ${sAnual.brd}` }}>
-                                {p.Avance.toFixed(1)}%
-                              </span>
+                              <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 900, background: sAnual.bg, color: sAnual.col, border: `1px solid ${sAnual.brd}` }}>{p.Avance.toFixed(1)}%</span>
                             </td>
-                            <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', background: '#fff7ed', color: '#9a3412', borderLeft: '2px solid #fed7aa' }}>
-                              {fmt(p.pm)}
-                            </td>
-                            <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', background: '#fff7ed', color: '#c2410c', fontWeight: 900 }}>
-                              {fmt(p.dm)}
-                            </td>
-                            <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', background: '#fff7ed', color: '#ea580c', fontWeight: 800 }}>
-                              {fmt(p.porEjecutarOct)}
-                            </td>
+                            <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', background: '#fff7ed', color: '#9a3412', borderLeft: '2px solid #fed7aa' }}>{fmt(p.pm)}</td>
+                            <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', background: '#fff7ed', color: '#c2410c', fontWeight: 900 }}>{fmt(p.dm)}</td>
+                            <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', background: '#fff7ed', color: '#ea580c', fontWeight: 800 }}>{fmt(p.porEjecutarOct)}</td>
                             <td style={{ padding: '10px 10px', textAlign: 'center', background: '#fff7ed', borderRight: '2px solid #fed7aa' }}>
-                              <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 900, background: sMes.bg, color: sMes.col, border: `1px solid ${sMes.brd}` }}>
-                                {p.pctMes.toFixed(1)}%
-                              </span>
+                              <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 900, background: sMes.bg, color: sMes.col, border: `1px solid ${sMes.brd}` }}>{p.pctMes.toFixed(1)}%</span>
                             </td>
                             <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', color: '#be123c' }}>{fmt(p.saldo)}</td>
                           </tr>
 
-                          {/* SOLO SE MUESTRAN UNIDADES EJECUTORAS PARA EL PLIEGO 005. MINAM */}
                           {canExpand &&
                             !isCollapsed &&
                             p.ueList.map((u: any) => {
@@ -2082,23 +2101,13 @@ export default function App() {
                                   <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace', color: THEME_SLATE }}>{fmt(u.comp)}</td>
                                   <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: THEME_TEAL_DARK }}>{fmt(u.dev)}</td>
                                   <td style={{ padding: '8px 10px', textAlign: 'center' }}>
-                                    <span style={{ padding: '2px 7px', borderRadius: 6, fontSize: 9.5, fontWeight: 800, background: suAnual.bg, color: suAnual.col }}>
-                                      {u.Avance.toFixed(1)}%
-                                    </span>
+                                    <span style={{ padding: '2px 7px', borderRadius: 6, fontSize: 9.5, fontWeight: 800, background: suAnual.bg, color: suAnual.col }}>{u.Avance.toFixed(1)}%</span>
                                   </td>
-                                  <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace', background: '#fffaf5', color: '#9a3412', borderLeft: '2px solid #fed7aa' }}>
-                                    {fmt(u.pm)}
-                                  </td>
-                                  <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 800, color: '#c2410c', background: '#fffaf5' }}>
-                                    {fmt(u.dm)}
-                                  </td>
-                                  <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#ea580c', background: '#fffaf5' }}>
-                                    {fmt(u.porEjecutarOct)}
-                                  </td>
+                                  <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace', background: '#fffaf5', color: '#9a3412', borderLeft: '2px solid #fed7aa' }}>{fmt(u.pm)}</td>
+                                  <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 800, color: '#c2410c', background: '#fffaf5' }}>{fmt(u.dm)}</td>
+                                  <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#ea580c', background: '#fffaf5' }}>{fmt(u.porEjecutarOct)}</td>
                                   <td style={{ padding: '8px 10px', textAlign: 'center', background: '#fffaf5', borderRight: '2px solid #fed7aa' }}>
-                                    <span style={{ padding: '2px 7px', borderRadius: 6, fontSize: 9.5, fontWeight: 800, background: suMes.bg, color: suMes.col }}>
-                                      {u.pctMes.toFixed(1)}%
-                                    </span>
+                                    <span style={{ padding: '2px 7px', borderRadius: 6, fontSize: 9.5, fontWeight: 800, background: suMes.bg, color: suMes.col }}>{u.pctMes.toFixed(1)}%</span>
                                   </td>
                                   <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace', color: '#be123c' }}>{fmt(u.saldo)}</td>
                                 </tr>
@@ -2130,7 +2139,7 @@ export default function App() {
         )}
 
         {/* ═════════════════════════════════════════════════════════════════════
-            VISTA 2: PLIEGO 005 · MINAM (SIAF)
+            VISTA: PLIEGO 005 · MINAM (SIAF) - CON ENCABEZADO NARANJA "OCTUBRE 🎃"
            ═════════════════════════════════════════════════════════════════════ */}
         {tab === 'minam005' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -2146,7 +2155,7 @@ export default function App() {
                   Tablero Especializado SIAF Gasto · Pliego 005: Ministerio del Ambiente (Corte {cfg.mesCorteLabel} 2026)
                 </h2>
                 <p style={{ fontSize: 12, opacity: 0.9, margin: '4px 0 0' }}>
-                  Control integral de ejecución anual, avance de {cfg.mesCorteLabel}, cadena de gasto SIAF y mapa de calor del IV Trimestre.
+                  Control integral de ejecución anual, avance de {cfg.mesCorteLabel}, cadena de gasto SIAF y seguimiento por Ejecutora y Órgano.
                 </p>
               </div>
             </div>
@@ -2326,13 +2335,13 @@ export default function App() {
               </GCard>
             </div>
 
-            {/* MATRIZ INTERACTIVA SIAF DEL PLIEGO 005 */}
+            {/* MATRIZ INTERACTIVA SIAF DEL PLIEGO 005 CON BARRA NARANJA "OCTUBRE 🎃" IGUAL A LA HOJA 1 */}
             <GCard
               full
               grad={VMGA_GRADIENT}
               icon={TableIcon}
               title={`Matriz Analítica SIAF Gasto · Pliego 005: Ministerio del Ambiente (Corte ${cfg.mesCorteLabel} 2026)`}
-              sub="Inspección completa de PIA, PIM, Certificado, Brecha sin Certificar, Compromiso, Devengado y Ejecución de Octubre"
+              sub="Inspección completa de PIA, PIM, Certificado, Brecha sin Certificar, Compromiso, Devengado y bloque Octubre con Calabaza"
               right={
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {[
@@ -2364,6 +2373,18 @@ export default function App() {
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                     <thead>
+                      {/* BARRA SUPERIOR CON RECUADRO NARANJA OCTUBRE + CALABAZA */}
+                      <tr>
+                        <th colSpan={8} style={{ background: '#141a1c', color: '#cbd5e1', padding: '8px 12px', fontSize: 10, fontWeight: 900, letterSpacing: 1.2, textAlign: 'left', borderRadius: '10px 0 0 0', borderBottom: '1px solid #334155' }}>
+                          CADENA PRESUPUESTAL ANUAL SIAF · PLIEGO 005: MINISTERIO DEL AMBIENTE
+                        </th>
+                        <th colSpan={4} style={{ background: HALLOWEEN_GRAD, color: '#ffffff', padding: '8px 12px', fontSize: 11.5, fontWeight: 900, letterSpacing: 1.8, textAlign: 'center', borderLeft: '2px solid #ffffff', borderRight: '2px solid #ffffff' }}>
+                          <PumpkinBadge />
+                        </th>
+                        <th style={{ background: '#141a1c', color: '#cbd5e1', padding: '8px 10px', fontSize: 10, fontWeight: 900, textAlign: 'right', borderRadius: '0 10px 0 0', borderBottom: '1px solid #334155' }}>
+                          CIERRE ANUAL
+                        </th>
+                      </tr>
                       <tr style={{ background: THEME_DARKEST, color: 'white', textAlign: 'left' }}>
                         <th style={{ padding: '10px 12px' }}>Unidad Ejecutora / Órgano (Pliego 005)</th>
                         <th style={{ padding: '10px 9px', textAlign: 'right' }}>PIA 2026</th>
@@ -2373,9 +2394,10 @@ export default function App() {
                         <th style={{ padding: '10px 9px', textAlign: 'right' }}>Compromiso</th>
                         <th style={{ padding: '10px 9px', textAlign: 'right' }}>Devengado Acum.</th>
                         <th style={{ padding: '10px 9px', textAlign: 'center' }}>% PIM</th>
-                        <th style={{ padding: '10px 9px', textAlign: 'right', background: '#E8590C' }}>Prog. Oct</th>
+                        <th style={{ padding: '10px 9px', textAlign: 'right', background: '#E8590C', borderLeft: '2px solid #fff' }}>Prog. Oct</th>
                         <th style={{ padding: '10px 9px', textAlign: 'right', background: '#E8590C' }}>Dev. Oct</th>
-                        <th style={{ padding: '10px 9px', textAlign: 'center', background: '#E8590C' }}>% Oct</th>
+                        <th style={{ padding: '10px 9px', textAlign: 'right', background: '#E8590C' }}>Por Ejecutar Oct</th>
+                        <th style={{ padding: '10px 9px', textAlign: 'center', background: '#E8590C', borderRight: '2px solid #fff' }}>% Oct</th>
                         <th style={{ padding: '10px 9px', textAlign: 'right' }}>Saldo por Devengar</th>
                       </tr>
                     </thead>
@@ -2396,7 +2418,7 @@ export default function App() {
                               style={{ background: '#f8fafc', borderBottom: '1px solid #cbd5e1', cursor: 'pointer', fontWeight: 800 }}
                             >
                               <td style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                {isCol ? <ChevronRight size={15} /> : <ChevronDown size={15} />}
+                                {isCol ? <ChevronRight size={15} color={THEME_ORANGE} /> : <ChevronDown size={15} color={THEME_ORANGE} />}
                                 {u.name}
                               </td>
                               <td style={{ padding: '10px 9px', textAlign: 'right', fontFamily: 'monospace' }}>{fmt(u.pia)}</td>
@@ -2406,16 +2428,13 @@ export default function App() {
                               <td style={{ padding: '10px 9px', textAlign: 'right', fontFamily: 'monospace' }}>{fmt(u.comp)}</td>
                               <td style={{ padding: '10px 9px', textAlign: 'right', fontFamily: 'monospace', color: THEME_TEAL_DARK }}>{fmt(u.dev)}</td>
                               <td style={{ padding: '10px 9px', textAlign: 'center' }}>
-                                <span style={{ padding: '3px 7px', borderRadius: 6, fontSize: 10, fontWeight: 900, background: u.semAnual.bg, color: u.semAnual.col }}>
-                                  {u.Avance.toFixed(1)}%
-                                </span>
+                                <span style={{ padding: '3px 7px', borderRadius: 6, fontSize: 10, fontWeight: 900, background: u.semAnual.bg, color: u.semAnual.col }}>{u.Avance.toFixed(1)}%</span>
                               </td>
-                              <td style={{ padding: '10px 9px', textAlign: 'right', fontFamily: 'monospace', background: '#fff7ed' }}>{fmt(u.progOct)}</td>
+                              <td style={{ padding: '10px 9px', textAlign: 'right', fontFamily: 'monospace', background: '#fff7ed', color: '#9a3412', borderLeft: '2px solid #fed7aa' }}>{fmt(u.progOct)}</td>
                               <td style={{ padding: '10px 9px', textAlign: 'right', fontFamily: 'monospace', background: '#fff7ed', fontWeight: 900, color: '#c2410c' }}>{fmt(u.devOct)}</td>
-                              <td style={{ padding: '10px 9px', textAlign: 'center', background: '#fff7ed' }}>
-                                <span style={{ padding: '3px 7px', borderRadius: 6, fontSize: 10, fontWeight: 900, background: u.sem.bg, color: u.sem.col }}>
-                                  {u.pctOct.toFixed(1)}%
-                                </span>
+                              <td style={{ padding: '10px 9px', textAlign: 'right', fontFamily: 'monospace', background: '#fff7ed', fontWeight: 800, color: '#ea580c' }}>{fmt(u.porEjecutarOct)}</td>
+                              <td style={{ padding: '10px 9px', textAlign: 'center', background: '#fff7ed', borderRight: '2px solid #fed7aa' }}>
+                                <span style={{ padding: '3px 7px', borderRadius: 6, fontSize: 10, fontWeight: 900, background: u.sem.bg, color: u.sem.col }}>{u.pctOct.toFixed(1)}%</span>
                               </td>
                               <td style={{ padding: '10px 9px', textAlign: 'right', fontFamily: 'monospace', color: '#be123c' }}>{fmt(u.saldo)}</td>
                             </tr>
@@ -2430,16 +2449,13 @@ export default function App() {
                                   <td style={{ padding: '8px 9px', textAlign: 'right', fontFamily: 'monospace' }}>{fmt(o.comp)}</td>
                                   <td style={{ padding: '8px 9px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: THEME_TEAL_DARK }}>{fmt(o.dev)}</td>
                                   <td style={{ padding: '8px 9px', textAlign: 'center' }}>
-                                    <span style={{ padding: '2px 6px', borderRadius: 6, fontSize: 9.5, fontWeight: 800, background: o.semAnual.bg, color: o.semAnual.col }}>
-                                      {o.Avance.toFixed(1)}%
-                                    </span>
+                                    <span style={{ padding: '2px 6px', borderRadius: 6, fontSize: 9.5, fontWeight: 800, background: o.semAnual.bg, color: o.semAnual.col }}>{o.Avance.toFixed(1)}%</span>
                                   </td>
-                                  <td style={{ padding: '8px 9px', textAlign: 'right', fontFamily: 'monospace', background: '#fffaf5' }}>{fmt(o.progOct)}</td>
+                                  <td style={{ padding: '8px 9px', textAlign: 'right', fontFamily: 'monospace', background: '#fffaf5', borderLeft: '2px solid #fed7aa' }}>{fmt(o.progOct)}</td>
                                   <td style={{ padding: '8px 9px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 800, color: '#c2410c', background: '#fffaf5' }}>{fmt(o.devOct)}</td>
-                                  <td style={{ padding: '8px 9px', textAlign: 'center', background: '#fffaf5' }}>
-                                    <span style={{ padding: '2px 6px', borderRadius: 6, fontSize: 9.5, fontWeight: 800, background: o.sem.bg, color: o.sem.col }}>
-                                      {o.pctOct.toFixed(1)}%
-                                    </span>
+                                  <td style={{ padding: '8px 9px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#ea580c', background: '#fffaf5' }}>{fmt(o.porEjecutarOct)}</td>
+                                  <td style={{ padding: '8px 9px', textAlign: 'center', background: '#fffaf5', borderRight: '2px solid #fed7aa' }}>
+                                    <span style={{ padding: '2px 6px', borderRadius: 6, fontSize: 9.5, fontWeight: 800, background: o.sem.bg, color: o.sem.col }}>{o.pctOct.toFixed(1)}%</span>
                                   </td>
                                   <td style={{ padding: '8px 9px', textAlign: 'right', fontFamily: 'monospace', color: '#be123c' }}>{fmt(o.saldo)}</td>
                                 </tr>
@@ -2456,6 +2472,17 @@ export default function App() {
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                     <thead>
+                      <tr>
+                        <th colSpan={6} style={{ background: '#141a1c', color: '#cbd5e1', padding: '8px 12px', fontSize: 10, fontWeight: 900, textAlign: 'left', borderRadius: '10px 0 0 0' }}>
+                          CLASIFICADOR DE GASTO SIAF · PLIEGO 005
+                        </th>
+                        <th colSpan={3} style={{ background: HALLOWEEN_GRAD, color: '#fff', padding: '8px 12px', fontSize: 11.5, fontWeight: 900, textAlign: 'center', borderLeft: '2px solid #fff', borderRight: '2px solid #fff' }}>
+                          <PumpkinBadge />
+                        </th>
+                        <th style={{ background: '#141a1c', color: '#cbd5e1', padding: '8px 10px', fontSize: 10, fontWeight: 900, textAlign: 'right', borderRadius: '0 10px 0 0' }}>
+                          CIERRE
+                        </th>
+                      </tr>
                       <tr style={{ background: THEME_DARKEST, color: 'white', textAlign: 'left' }}>
                         <th style={{ padding: '10px 12px' }}>Clasificador / Específica de Gasto SIAF</th>
                         <th style={{ padding: '10px 10px' }}>Genérica</th>
@@ -2463,9 +2490,9 @@ export default function App() {
                         <th style={{ padding: '10px 10px', textAlign: 'right' }}>Certificado</th>
                         <th style={{ padding: '10px 10px', textAlign: 'right' }}>Devengado Acum.</th>
                         <th style={{ padding: '10px 10px', textAlign: 'center' }}>% Avance</th>
-                        <th style={{ padding: '10px 10px', textAlign: 'right', background: '#E8590C' }}>Prog. Octubre</th>
+                        <th style={{ padding: '10px 10px', textAlign: 'right', background: '#E8590C', borderLeft: '2px solid #fff' }}>Prog. Octubre</th>
                         <th style={{ padding: '10px 10px', textAlign: 'right', background: '#E8590C' }}>Dev. Octubre</th>
-                        <th style={{ padding: '10px 10px', textAlign: 'center', background: '#E8590C' }}>% Oct.</th>
+                        <th style={{ padding: '10px 10px', textAlign: 'center', background: '#E8590C', borderRight: '2px solid #fff' }}>% Oct.</th>
                         <th style={{ padding: '10px 10px', textAlign: 'right' }}>Saldo por Devengar</th>
                       </tr>
                     </thead>
@@ -2483,9 +2510,9 @@ export default function App() {
                             <td style={{ padding: '9px 10px', textAlign: 'center' }}>
                               <span style={{ padding: '2px 7px', borderRadius: 6, fontSize: 9.5, fontWeight: 800, background: sA.bg, color: sA.col }}>{e.Avance.toFixed(1)}%</span>
                             </td>
-                            <td style={{ padding: '9px 10px', textAlign: 'right', fontFamily: 'monospace', background: '#fffaf5' }}>{fmt(e.progOct)}</td>
+                            <td style={{ padding: '9px 10px', textAlign: 'right', fontFamily: 'monospace', background: '#fffaf5', borderLeft: '2px solid #fed7aa' }}>{fmt(e.progOct)}</td>
                             <td style={{ padding: '9px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 800, color: '#c2410c', background: '#fffaf5' }}>{fmt(e.devOct)}</td>
-                            <td style={{ padding: '9px 10px', textAlign: 'center', background: '#fffaf5' }}>
+                            <td style={{ padding: '9px 10px', textAlign: 'center', background: '#fffaf5', borderRight: '2px solid #fed7aa' }}>
                               <span style={{ padding: '2px 7px', borderRadius: 6, fontSize: 9.5, fontWeight: 800, background: sO.bg, color: sO.col }}>{e.AvanceOct.toFixed(1)}%</span>
                             </td>
                             <td style={{ padding: '9px 10px', textAlign: 'right', fontFamily: 'monospace', color: '#be123c' }}>{fmt(e.saldo)}</td>
@@ -2501,6 +2528,14 @@ export default function App() {
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10.8 }}>
                     <thead>
+                      <tr>
+                        <th colSpan={7} style={{ background: '#141a1c', color: '#cbd5e1', padding: '8px 12px', fontSize: 10, fontWeight: 900, textAlign: 'left', borderRadius: '10px 0 0 0' }}>
+                          DETALLE DE METAS Y PROYECTOS CUI · PLIEGO 005
+                        </th>
+                        <th colSpan={3} style={{ background: HALLOWEEN_GRAD, color: '#fff', padding: '8px 12px', fontSize: 11.5, fontWeight: 900, textAlign: 'center', borderRadius: '0 10px 0 0', borderLeft: '2px solid #fff' }}>
+                          <PumpkinBadge />
+                        </th>
+                      </tr>
                       <tr style={{ background: THEME_DARKEST, color: 'white', textAlign: 'left' }}>
                         <th style={{ padding: '10px 10px' }}>Unidad Ejecutora</th>
                         <th style={{ padding: '10px 10px' }}>Órgano / Unidad Orgánica</th>
@@ -2509,7 +2544,7 @@ export default function App() {
                         <th style={{ padding: '10px 9px', textAlign: 'right' }}>PIM 2026</th>
                         <th style={{ padding: '10px 9px', textAlign: 'right' }}>Devengado Acum.</th>
                         <th style={{ padding: '10px 9px', textAlign: 'center' }}>% Anual</th>
-                        <th style={{ padding: '10px 9px', textAlign: 'right', background: '#E8590C' }}>Prog. Oct</th>
+                        <th style={{ padding: '10px 9px', textAlign: 'right', background: '#E8590C', borderLeft: '2px solid #fff' }}>Prog. Oct</th>
                         <th style={{ padding: '10px 9px', textAlign: 'right', background: '#E8590C' }}>Dev. Oct</th>
                         <th style={{ padding: '10px 9px', textAlign: 'center', background: '#E8590C' }}>% Oct</th>
                       </tr>
@@ -2543,7 +2578,7 @@ export default function App() {
                             <td style={{ padding: '8px 9px', textAlign: 'center' }}>
                               <span style={{ padding: '2px 6px', borderRadius: 6, fontSize: 9.5, fontWeight: 800, background: sA.bg, color: sA.col }}>{avA.toFixed(1)}%</span>
                             </td>
-                            <td style={{ padding: '8px 9px', textAlign: 'right', fontFamily: 'monospace', background: '#fffaf5' }}>{fmt(pOct)}</td>
+                            <td style={{ padding: '8px 9px', textAlign: 'right', fontFamily: 'monospace', background: '#fffaf5', borderLeft: '2px solid #fed7aa' }}>{fmt(pOct)}</td>
                             <td style={{ padding: '8px 9px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 800, color: '#c2410c', background: '#fffaf5' }}>{fmt(dOct)}</td>
                             <td style={{ padding: '8px 9px', textAlign: 'center', background: '#fffaf5' }}>
                               <span style={{ padding: '2px 6px', borderRadius: 6, fontSize: 9.5, fontWeight: 800, background: sO.bg, color: sO.col }}>{avO.toFixed(1)}%</span>
@@ -2559,14 +2594,12 @@ export default function App() {
           </div>
         )}
 
-        {/* ═════════════════════════════════════════════════════════════════════
-            VISTA 3: AVANCE OCTUBRE Y MAPA IV TRIMESTRE
-           ═════════════════════════════════════════════════════════════════════ */}
+        {/* VISTA: AVANCE OCTUBRE Y MAPA IV TRIMESTRE */}
         {tab === 'octubre' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12 }}>
               <div style={{ background: THEME_PETROL, color: 'white', padding: '16px 18px', borderRadius: 18 }}>
-                <div style={{ fontSize: 10, fontWeight: 800, opacity: 0.85 }}>PROGRAMACION OCTUBRE</div>
+                <div style={{ fontSize: 10, fontWeight: 800, opacity: 0.85 }}>PROGRAMACION OCTUBRE 🎃</div>
                 <div style={{ fontSize: 22, fontWeight: 900, marginTop: 4 }}>{fmtM(kpis.progOct)}</div>
                 <div style={{ fontSize: 10.5, opacity: 0.9, marginTop: 4 }}>Meta programada para Octubre</div>
               </div>
@@ -2591,14 +2624,7 @@ export default function App() {
               </div>
             </div>
 
-            <GCard
-              full
-              grad={OCT_GRADIENT}
-              icon={Flame}
-              title="Cuadro Sombreado de Concentración de Programación (OCTUBRE, NOVIEMBRE y DICIEMBRE)"
-              sub="Se sombrea automáticamente el mes de mayor programación en el IV Trimestre"
-              badge="MAPA DE CALOR POR PLIEGO"
-            >
+            <GCard full grad={OCT_GRADIENT} icon={Flame} title="Cuadro Sombreado de Concentración de Programación (OCTUBRE, NOVIEMBRE y DICIEMBRE)" sub="Se sombrea automáticamente el mes de mayor programación en el IV Trimestre" badge="MAPA DE CALOR POR PLIEGO">
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.3 }}>
                   <thead>
@@ -2606,7 +2632,7 @@ export default function App() {
                       <th style={{ padding: '11px 12px', borderRadius: '10px 0 0 0' }}>Pliego / Unidad Ejecutora</th>
                       <th style={{ padding: '11px 10px', textAlign: 'right' }}>DEVENGADO OCTUBRE</th>
                       <th style={{ padding: '11px 10px', textAlign: 'center' }}>% Avance Oct.</th>
-                      <th style={{ padding: '11px 12px', textAlign: 'right', borderLeft: '2px solid #334155' }}>PROGRAMACION OCTUBRE</th>
+                      <th style={{ padding: '11px 12px', textAlign: 'right', borderLeft: '2px solid #334155' }}>PROGRAMACION OCTUBRE 🎃</th>
                       <th style={{ padding: '11px 12px', textAlign: 'right' }}>PROGRAMACION NOVIEMBRE</th>
                       <th style={{ padding: '11px 12px', textAlign: 'right' }}>PROGRAMACION DICIEMBRE</th>
                       <th style={{ padding: '11px 10px', textAlign: 'right', borderLeft: '2px solid #334155', borderRadius: '0 10px 0 0' }}>Total Prog. IV Trim.</th>
@@ -2643,28 +2669,13 @@ export default function App() {
                             </td>
                             <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', color: THEME_GREEN, fontWeight: 900 }}>{fmt(p.devOct)}</td>
                             <td style={{ padding: '10px 10px', textAlign: 'center' }}>
-                              <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 900, background: sOct.bg, color: sOct.col, border: `1px solid ${sOct.brd}` }}>
-                                {p.pctOct.toFixed(1)}%
-                              </span>
+                              <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 900, background: sOct.bg, color: sOct.col, border: `1px solid ${sOct.brd}` }}>{p.pctOct.toFixed(1)}%</span>
                             </td>
                             <td style={getCellStyle('OCT')}>{fmt(p.progOct)} {p.maxQ4Short === 'OCT' ? '★' : ''}</td>
                             <td style={getCellStyle('NOV')}>{fmt(p.progNov)} {p.maxQ4Short === 'NOV' ? '★' : ''}</td>
                             <td style={getCellStyle('DIC')}>{fmt(p.progDic)} {p.maxQ4Short === 'DIC' ? '★' : ''}</td>
                             <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 900, borderLeft: '2px solid #e2e8f0' }}>{fmt(p.totalQ4)}</td>
                           </tr>
-                          {canExpand &&
-                            !isCollapsed &&
-                            p.ueList.map((u: any) => (
-                              <tr key={u.name} style={{ borderBottom: '1px solid #e2e8f0', fontSize: 10.8, background: 'white' }}>
-                                <td style={{ padding: '8px 12px 8px 32px', color: THEME_CHARCOAL, fontWeight: 700 }}>↳ {u.name}</td>
-                                <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace', color: THEME_GREEN, fontWeight: 700 }}>{fmt(u.devOct)}</td>
-                                <td style={{ padding: '8px 10px', textAlign: 'center' }}>{u.pctOct.toFixed(1)}%</td>
-                                <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'monospace' }}>{fmt(u.progOct)}</td>
-                                <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'monospace' }}>{fmt(u.progNov)}</td>
-                                <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'monospace' }}>{fmt(u.progDic)}</td>
-                                <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace', borderLeft: '2px solid #f1f5f9' }}>{fmt(u.totalQ4)}</td>
-                              </tr>
-                            ))}
                         </React.Fragment>
                       );
                     })}
@@ -2683,9 +2694,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ═════════════════════════════════════════════════════════════════════
-            VISTA 4: ANÁLISIS PRESUPUESTÓLOGO
-           ═════════════════════════════════════════════════════════════════════ */}
+        {/* VISTA: ANÁLISIS PRESUPUESTÓLOGO */}
         {tab === 'presupuestologo' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 16 }}>
@@ -2723,43 +2732,10 @@ export default function App() {
                 </div>
               </GCard>
             </div>
-
-            <GCard full grad={OCT_GRADIENT} icon={TableIcon} title={`Matriz de Control de Brechas SIAF y Esfuerzo de Cierre Fiscal (Corte ${cfg.mesCorteLabel} 2026)`} sub="Seguimiento de saldos por certificar, comprometer y devengar">
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.2 }}>
-                  <thead>
-                    <tr style={{ background: THEME_DARKEST, color: 'white', textAlign: 'left' }}>
-                      <th style={{ padding: '10px 12px' }}>Pliego Presupuestal</th>
-                      <th style={{ padding: '10px 10px', textAlign: 'right' }}>PIM 2026</th>
-                      <th style={{ padding: '10px 10px', textAlign: 'right', color: '#FB8281' }}>Sin Certificar (PIM - Cert)</th>
-                      <th style={{ padding: '10px 10px', textAlign: 'right', color: '#F4D25A' }}>Sin Comprometer (Cert - Comp)</th>
-                      <th style={{ padding: '10px 10px', textAlign: 'right', color: THEME_LIGHT_BLUE }}>Por Devengar (Comp - Dev)</th>
-                      <th style={{ padding: '10px 10px', textAlign: 'right' }}>Ritmo Ene–Oct (/mes)</th>
-                      <th style={{ padding: '10px 10px', textAlign: 'right' }}>Meta Nov–Dic (/mes)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pliegoChartData.map((p: any) => (
-                      <tr key={p.name} style={{ borderBottom: '1px solid #e2e8f0', background: 'white' }}>
-                        <td style={{ padding: '10px 12px', fontWeight: 800 }}>{p.name}</td>
-                        <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700 }}>{fmt(p.pim)}</td>
-                        <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', color: THEME_RED, fontWeight: 700 }}>{fmt(p.noCert)}</td>
-                        <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', color: THEME_ORANGE, fontWeight: 700 }}>{fmt(p.certNoComp)}</td>
-                        <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', color: THEME_TEAL_DARK, fontWeight: 700 }}>{fmt(p.compNoDev)}</td>
-                        <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace' }}>{fmt(p.promEneOct)}</td>
-                        <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 800 }}>{fmt(p.reqNovDic)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </GCard>
           </div>
         )}
 
-        {/* ═════════════════════════════════════════════════════════════════════
-            VISTA 5: PROGRAMACIÓN 12 MESES
-           ═════════════════════════════════════════════════════════════════════ */}
+        {/* VISTA: PROGRAMACIÓN 12 MESES */}
         {tab === 'prog' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             <GCard
@@ -2827,7 +2803,7 @@ export default function App() {
                     <th style={{ padding: '10px 10px', textAlign: 'right' }}>PIM 2026</th>
                     <th style={{ padding: '10px 10px', textAlign: 'right' }}>Devengado Acum.</th>
                     <th style={{ padding: '10px 10px', textAlign: 'center' }}>% Anual</th>
-                    <th style={{ padding: '10px 10px', textAlign: 'right', background: '#E8590C' }}>Prog. Octubre</th>
+                    <th style={{ padding: '10px 10px', textAlign: 'right', background: '#E8590C' }}>Prog. Octubre 🎃</th>
                     <th style={{ padding: '10px 10px', textAlign: 'right', background: '#E8590C' }}>Dev. Octubre</th>
                     <th style={{ padding: '10px 10px', textAlign: 'right' }}>Prog. Nov+Dic</th>
                   </tr>
@@ -2853,51 +2829,31 @@ export default function App() {
 
         {/* VISTA GOBIERNO NACIONAL */}
         {tab === 'gobnac' && (
-          <GCard
-            full
-            grad={OCT_GRADIENT}
-            icon={Globe}
-            title={`Resumen de Ejecución · Gobierno Nacional (${gobNacFileName})`}
-            sub="Vista alimentada automáticamente desde el archivo resumen_ejecucion_gobierno_nacional.xlsx en SharePoint"
-            badge={syncStatus.gob_nacional}
-          >
-            {gobNacionalData.length === 0 ? (
-              <div style={{ padding: 28, textAlign: 'center', color: THEME_SLATE, fontSize: 13, fontWeight: 600 }}>
-                Conectado al sitio SharePoint <strong>BASEDEDATOS-DASHBOARDMINAM</strong>. En cuanto el archivo <code>resumen_ejecucion_gobierno_nacional.xlsx</code> esté disponible en tu SharePoint, sus registros se visualizarán automáticamente aquí.
-              </div>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.2 }}>
-                  <thead>
-                    <tr style={{ background: THEME_DARKEST, color: 'white', textAlign: 'left' }}>
-                      <th style={{ padding: '10px 12px' }}>Sector / Pliego</th>
-                      <th style={{ padding: '10px 10px', textAlign: 'right' }}>PIA</th>
-                      <th style={{ padding: '10px 10px', textAlign: 'right' }}>PIM</th>
-                      <th style={{ padding: '10px 10px', textAlign: 'right' }}>Certificado</th>
-                      <th style={{ padding: '10px 10px', textAlign: 'right' }}>Compromiso Anual</th>
-                      <th style={{ padding: '10px 10px', textAlign: 'right' }}>Devengado</th>
-                      <th style={{ padding: '10px 10px', textAlign: 'center' }}>% Avance PIM</th>
+          <GCard full grad={OCT_GRADIENT} icon={Globe} title={`Resumen de Ejecución · Gobierno Nacional (${gobNacFileName})`} sub="Vista alimentada automáticamente desde el archivo resumen_ejecucion_gobierno_nacional.xlsx en SharePoint" badge={syncStatus.gob_nacional}>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.2 }}>
+                <thead>
+                  <tr style={{ background: THEME_DARKEST, color: 'white', textAlign: 'left' }}>
+                    <th style={{ padding: '10px 12px' }}>Sector / Ministerio</th>
+                    <th style={{ padding: '10px 10px', textAlign: 'right' }}>PIM Vigente</th>
+                    <th style={{ padding: '10px 10px', textAlign: 'right' }}>Devengado Acumulado</th>
+                    <th style={{ padding: '10px 10px', textAlign: 'center' }}>% Avance PIM</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {funnelMinisteriosData.map((r: any, idx: number) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9', background: r.isMinam ? '#ecfdf5' : 'white' }}>
+                      <td style={{ padding: '9px 12px', fontWeight: r.isMinam ? 900 : 700, color: r.isMinam ? THEME_FOREST : THEME_DARKEST }}>
+                        {r.isMinam ? `★ ${r.name}` : r.name}
+                      </td>
+                      <td style={{ padding: '9px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700 }}>{fmt(r.pim)}</td>
+                      <td style={{ padding: '9px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: THEME_TEAL_DARK }}>{fmt(r.dev)}</td>
+                      <td style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 900, color: THEME_GREEN }}>{r.pct.toFixed(1)}%</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {gobNacionalData.map((r: any, idx: number) => {
-                      const av = r.MONTO_PIM > 0 ? (r.TOTAL_DEVENGADO / r.MONTO_PIM) * 100 : 0;
-                      return (
-                        <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '9px 12px', fontWeight: 800 }}>{r.PLIEGO_NOMBRE || r.PLIEGO}</td>
-                          <td style={{ padding: '9px 10px', textAlign: 'right', fontFamily: 'monospace' }}>{fmt(r.MONTO_PIA)}</td>
-                          <td style={{ padding: '9px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700 }}>{fmt(r.MONTO_PIM)}</td>
-                          <td style={{ padding: '9px 10px', textAlign: 'right', fontFamily: 'monospace' }}>{fmt(r.MONTO_CERTIFICADO)}</td>
-                          <td style={{ padding: '9px 10px', textAlign: 'right', fontFamily: 'monospace' }}>{fmt(r.MONTO_COMPROMETIDO_ANUAL)}</td>
-                          <td style={{ padding: '9px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: THEME_TEAL_DARK }}>{fmt(r.TOTAL_DEVENGADO)}</td>
-                          <td style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 800, color: THEME_GREEN }}>{av.toFixed(1)}%</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </GCard>
         )}
 
@@ -2957,7 +2913,7 @@ export default function App() {
                     <th style={{ padding: '10px 10px', textAlign: 'right' }}>Certificado</th>
                     <th style={{ padding: '10px 10px', textAlign: 'right' }}>Devengado Acum.</th>
                     <th style={{ padding: '10px 10px', textAlign: 'center' }}>% Avance Anual</th>
-                    <th style={{ padding: '10px 10px', textAlign: 'right', background: '#E8590C' }}>PROGRAMACION OCTUBRE</th>
+                    <th style={{ padding: '10px 10px', textAlign: 'right', background: '#E8590C' }}>PROGRAMACION OCTUBRE 🎃</th>
                     <th style={{ padding: '10px 10px', textAlign: 'right', background: '#E8590C' }}>DEVENGADO_OCTUBRE</th>
                   </tr>
                 </thead>
